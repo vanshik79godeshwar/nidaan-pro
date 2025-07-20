@@ -1,0 +1,28 @@
+server:
+  port: 9000 # The gateway will run on this port
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE # "lb" means load balance to the service named "AUTH-SERVICE" in Eureka
+          predicates:
+            - Path=/api/auth/** # Any request to /api/auth/** goes to auth-service
+
+        - id: user-profile-service
+          uri: lb://USER-PROFILE-SERVICE
+          predicates:
+            - Path=/api/profiles/**, /api/specialities/**, /api/doctors/**
+
+        - id: consultation-service
+          uri: lb://CONSULTATION-SERVICE
+          predicates:
+            - Path=/api/consultations/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
