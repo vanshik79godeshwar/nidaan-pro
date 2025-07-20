@@ -71,4 +71,11 @@ public class UserProfileService {
     public List<DoctorSpeciality> getAllSpecialities() {
         return specialityRepository.findAll();
     }
+
+    public List<Doctor> findDoctors(Integer specialityId) {
+        if (specialityId != null) {
+            return doctorRepository.findBySpecialityId(specialityId);
+        }
+        return doctorRepository.findAll();
+    }
 }
