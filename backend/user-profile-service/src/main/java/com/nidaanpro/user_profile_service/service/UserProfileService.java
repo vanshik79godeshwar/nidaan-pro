@@ -1,8 +1,6 @@
 package com.nidaanpro.user_profile_service.service;
 
-import com.nidaanpro.user_profile_service.dto.CreateDoctorProfileDto;
-import com.nidaanpro.user_profile_service.dto.CreatePatientProfileDto;
-import com.nidaanpro.user_profile_service.dto.CreateSpecialityDto;
+import com.nidaanpro.user_profile_service.dto.*;
 import com.nidaanpro.user_profile_service.model.Doctor;
 import com.nidaanpro.user_profile_service.model.DoctorSpeciality;
 import com.nidaanpro.user_profile_service.model.Patient;
@@ -10,23 +8,30 @@ import com.nidaanpro.user_profile_service.repo.DoctorRepository;
 import com.nidaanpro.user_profile_service.repo.DoctorSpecialityRepository;
 import com.nidaanpro.user_profile_service.repo.PatientRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserProfileService {
 
+
+
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DoctorSpecialityRepository specialityRepository; // <-- ADD THIS
-
+    private final WebClient.Builder webClientBuilder;
     // <-- UPDATE THE CONSTRUCTOR
-    public UserProfileService(DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorSpecialityRepository specialityRepository) {
+    public UserProfileService(DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorSpecialityRepository specialityRepository, WebClient.Builder webClientBuilder) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.specialityRepository = specialityRepository;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public Doctor createDoctorProfile(CreateDoctorProfileDto dto) {
@@ -72,10 +77,34 @@ public class UserProfileService {
         return specialityRepository.findAll();
     }
 
-    public List<Doctor> findDoctors(Integer specialityId) {
-        if (specialityId != null) {
-            return doctorRepository.findBySpecialityId(specialityId);
+    public List<DoctorDetailDto> findDoctors(Integer specialityId) {
+        // 1. Get doctor profiles from our DB
+        List<Doctor> doctors = (specialityId != null)
+                ? doctorRepository.findBySpecialityId(specialityId)
+                : doctorRepository.findAll();
+
+        if (doctors.isEmpty()) {
+            return List.of();
         }
-        return doctorRepository.findAll();
+
+        // 2. Get a list of their user IDs
+        List<UUID> userIds = doctors.stream().map(Doctor::getUserId).toList();
+
+        // 3. Call auth-service to get user details
+        Map<UUID, UserDto> userDtoMap = webClientBuilder.build().post()
+                .uri("http://AUTH-SERVICE/api/users/details") // Eureka finds the service
+                .body(Mono.just(userIds), List.class)
+                .retrieve()
+                .bodyToFlux(UserDto.class)
+                .collectMap(UserDto::id)
+                .block(); // .block() makes the async call synchronous
+
+        // 4. Combine the data
+        return doctors.stream()
+                .map(doctor -> {
+                    UserDto user = userDtoMap.get(doctor.getUserId());
+                    return new DoctorDetailDto(doctor, user.fullName(), user.email());
+                })
+                .collect(Collectors.toList());
     }
 }
