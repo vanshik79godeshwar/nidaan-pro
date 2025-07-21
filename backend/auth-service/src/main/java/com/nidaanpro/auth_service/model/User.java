@@ -22,6 +22,9 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
+    private String resetToken;
+    private Instant resetTokenExpiry;
+
     @Column(unique = true)
     private String phoneNumber;
 
