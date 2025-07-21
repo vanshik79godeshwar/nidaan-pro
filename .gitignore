@@ -31,3 +31,6 @@ yarn-error.log*
 # Environment variables
 .env
 .env*.local
+
+# Ignore all secret property files
+**/application-secrets.properties
