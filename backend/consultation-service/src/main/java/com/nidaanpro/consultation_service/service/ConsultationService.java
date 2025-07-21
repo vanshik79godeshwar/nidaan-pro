@@ -9,6 +9,8 @@ import com.nidaanpro.consultation_service.repo.PreConsultationReportRepository; 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // <-- Import Transactional
 
+import java.util.UUID;
+
 @Service
 public class ConsultationService {
 
@@ -47,5 +49,9 @@ public class ConsultationService {
         appointmentRepository.save(appointment);
 
         return savedReport;
+    }
+
+    public boolean validateChatPair(UUID userId1, UUID userId2) {
+        return appointmentRepository.existsByPatientIdAndDoctorId(userId1, userId2);
     }
 }
