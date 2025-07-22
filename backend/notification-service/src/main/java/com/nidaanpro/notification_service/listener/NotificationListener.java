@@ -35,4 +35,13 @@ public class NotificationListener {
         String body = "Hello,\n\nYou requested a password reset. Click the link below:\n\nhttp://localhost:3000/reset-password?token=" + token + "\n\nThis link will expire in 1 hour.";
         emailService.sendEmail(email, subject, body);
     }
+
+    @RabbitListener(queues = "appointment-booking-queue") // Use the new queue name
+    public void handleAppointmentBooking(String appointmentId) {
+        System.out.println("======================================================");
+        System.out.println("Received new appointment booking event!");
+        System.out.println("Sending confirmation email for appointment ID: " + appointmentId);
+        System.out.println("======================================================");
+        // Here you would call the EmailService to send the confirmation
+    }
 }

@@ -14,10 +14,10 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
+    private final long expiration = 86400000; // 24 hours
+
     public String generateToken(UUID userId, String role) {
         Date now = new Date();
-        // 24 hours
-        long expiration = 86400000;
         Date expiryDate = new Date(now.getTime() + expiration);
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 

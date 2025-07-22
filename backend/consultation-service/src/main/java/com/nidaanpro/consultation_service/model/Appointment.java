@@ -40,7 +40,8 @@ public class Appointment {
         AWAITING_REPORT,
         READY,
         COMPLETED,
-        CANCELLED
+        CANCELLED,
+        PENDING_PAYMENT // <-- Add this line
     }
 
     public enum ConsultationType {

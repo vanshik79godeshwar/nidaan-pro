@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ADDED "/api/users/**" to the list of permitted paths
+                        // CHANGE THIS LINE
                         .requestMatchers("/api/auth/**", "/api/users/**").permitAll()
                         .anyRequest().authenticated()
                 );
