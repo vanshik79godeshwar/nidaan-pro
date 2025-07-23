@@ -1,8 +1,8 @@
 package com.nidaanpro.user_profile_service.controller;
 
 import com.nidaanpro.user_profile_service.dto.DoctorDetailDto;
-import com.nidaanpro.user_profile_service.dto.DoctorScheduleDto;
-import com.nidaanpro.user_profile_service.model.DoctorSchedule;
+import com.nidaanpro.user_profile_service.dto.DoctorSlotDto;
+import com.nidaanpro.user_profile_service.model.DoctorSlot;
 import com.nidaanpro.user_profile_service.service.UserProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,22 +22,27 @@ public class DoctorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DoctorDetailDto>> findDoctors(
-            @RequestParam(required = false) Integer specialityId) {
-        List<DoctorDetailDto> doctors = userProfileService.findDoctors(specialityId);
-        return ResponseEntity.ok(doctors);
+    public ResponseEntity<List<DoctorDetailDto>> findDoctors(@RequestParam(required = false) Integer specialityId) {
+        return ResponseEntity.ok(userProfileService.findDoctors(specialityId));
     }
 
-    @PostMapping("/{doctorId}/schedule")
-    public ResponseEntity<DoctorSchedule> setSchedule(@PathVariable UUID doctorId, @RequestBody DoctorScheduleDto dto) {
-        // In a real app, you'd verify the logged-in user is this doctor
-        DoctorSchedule schedule = userProfileService.setDoctorSchedule(dto);
-        return new ResponseEntity<>(schedule, HttpStatus.CREATED);
+    @PostMapping("/{doctorId}/slots")
+    public ResponseEntity<DoctorSlot> addSlot(@RequestBody DoctorSlotDto dto) {
+        return new ResponseEntity<>(userProfileService.addDoctorSlot(dto), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{doctorId}/schedule")
-    public ResponseEntity<List<DoctorSchedule>> getSchedule(@PathVariable UUID doctorId) {
-        List<DoctorSchedule> schedule = userProfileService.getDoctorSchedule(doctorId);
-        return ResponseEntity.ok(schedule);
+    @GetMapping("/{doctorId}/slots")
+    public ResponseEntity<List<DoctorSlot>> getSlots(@PathVariable UUID doctorId) {
+        return ResponseEntity.ok(userProfileService.getDoctorAvailableSlots(doctorId));
+    }
+
+    @PostMapping("/slots/{slotId}/book")
+    public ResponseEntity<DoctorSlot> bookSlot(@PathVariable UUID slotId) {
+        try {
+            DoctorSlot bookedSlot = userProfileService.bookSlot(slotId);
+            return ResponseEntity.ok(bookedSlot);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 }

@@ -28,7 +28,11 @@ public class PaymentService {
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", dto.amount().multiply(new java.math.BigDecimal(100))); // Amount in paise
         orderRequest.put("currency", "INR");
-        orderRequest.put("receipt", "order_rcptid_" + dto.appointmentId());
+
+        // --- THIS IS THE FIX ---
+        // Create a shorter receipt ID that is under 40 characters
+        String shortReceiptId = "rcptid_" + dto.appointmentId().toString().replace("-", "");
+        orderRequest.put("receipt", shortReceiptId);
 
         Order order = razorpayClient.orders.create(orderRequest);
         String razorpayOrderId = order.get("id");

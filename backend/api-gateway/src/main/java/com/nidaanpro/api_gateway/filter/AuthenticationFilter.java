@@ -5,17 +5,16 @@ import com.nidaanpro.api_gateway.util.RouteValidator;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod; // <-- IMPORT THIS
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-// REMOVED @Component from here
 public class AuthenticationFilter implements GlobalFilter {
 
     private final RouteValidator validator;
     private final JwtUtil jwtUtil;
 
-    // ADDED a constructor to receive dependencies
     public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil) {
         this.validator = validator;
         this.jwtUtil = jwtUtil;
@@ -23,11 +22,15 @@ public class AuthenticationFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        System.out.println("Authentication filter is triggered for " + exchange.getRequest().getURI().getPath());
+        // --- ADD THIS BLOCK TO ALLOW CORS PREFLIGHT REQUESTS ---
+        if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+            exchange.getResponse().setStatusCode(HttpStatus.OK);
+            return Mono.empty();
+        }
+        // ----------------------------------------------------
 
         if (validator.isSecured.test(exchange.getRequest())) {
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                System.out.println("Missing authorization header");
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }
@@ -39,7 +42,6 @@ public class AuthenticationFilter implements GlobalFilter {
             try {
                 jwtUtil.validateToken(authHeader);
             } catch (Exception e) {
-                System.out.println("Invalid token... " + e.getMessage());
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
             }

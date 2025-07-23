@@ -14,6 +14,7 @@ public class RouteValidator {
             "/api/auth/login",
             "/api/auth/forgot-password", // <-- ADD THIS
             "/api/auth/reset-password"  // <-- AND ADD THIS
+            
     );
 
     public Predicate<ServerHttpRequest> isSecured =

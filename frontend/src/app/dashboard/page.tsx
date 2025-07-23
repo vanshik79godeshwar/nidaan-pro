@@ -1,34 +1,16 @@
 'use client';
-
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+// We can now remove the ProtectedRoute from here as it's in the layout
 import DoctorDashboard from '@/components/dashboard/DoctorDashboard';
 import PatientDashboard from '@/components/dashboard/PatientDashboard';
 import { useAuth } from '@/context/AuthContext';
 
-function Dashboard() {
+export default function DashboardPage() {
   const { user, isLoading } = useAuth();
 
-  // Show a loading state while the user's role is being determined
   if (isLoading) {
     return <p>Loading...</p>;
   }
 
-  return (
-    <div>
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        Welcome back, {user?.role === 'DOCTOR' ? 'Doctor!' : 'Patient!'}
-      </h1>
-
-      {user?.role === 'DOCTOR' ? <DoctorDashboard /> : <PatientDashboard />}
-    </div>
-  );
-}
-
-// Wrap the main page component with the ProtectedRoute
-export default function ProtectedDashboardPage() {
-  return (
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  );
+  // The main header can be simpler now
+  return user?.role === 'DOCTOR' ? <DoctorDashboard /> : <PatientDashboard />;
 }

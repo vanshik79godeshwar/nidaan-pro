@@ -2,15 +2,13 @@ package com.nidaanpro.user_profile_service.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.time.DayOfWeek;
-import java.time.LocalTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "doctor_schedules")
-public class DoctorSchedule {
+@Table(name = "doctor_slots")
+public class DoctorSlot {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -18,13 +16,9 @@ public class DoctorSchedule {
     @Column(nullable = false)
     private UUID doctorId;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DayOfWeek dayOfWeek;
+    private Instant slotTime;
 
     @Column(nullable = false)
-    private LocalTime startTime;
-
-    @Column(nullable = false)
-    private LocalTime endTime;
+    private boolean isBooked = false;
 }

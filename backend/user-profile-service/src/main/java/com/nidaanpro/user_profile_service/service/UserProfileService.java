@@ -1,18 +1,14 @@
 package com.nidaanpro.user_profile_service.service;
 
 import com.nidaanpro.user_profile_service.dto.*;
-import com.nidaanpro.user_profile_service.model.Doctor;
-import com.nidaanpro.user_profile_service.model.DoctorSchedule;
-import com.nidaanpro.user_profile_service.model.DoctorSpeciality;
-import com.nidaanpro.user_profile_service.model.Patient;
-import com.nidaanpro.user_profile_service.repo.DoctorRepository;
-import com.nidaanpro.user_profile_service.repo.DoctorScheduleRepository;
-import com.nidaanpro.user_profile_service.repo.DoctorSpecialityRepository;
-import com.nidaanpro.user_profile_service.repo.PatientRepository;
+import com.nidaanpro.user_profile_service.model.*;
+import com.nidaanpro.user_profile_service.repo.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,18 +21,18 @@ public class UserProfileService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DoctorSpecialityRepository specialityRepository;
-    private final DoctorScheduleRepository doctorScheduleRepository; // <-- Add this
+    private final DoctorSlotRepository doctorSlotRepository;
     private final WebClient.Builder webClientBuilder;
 
-    // <-- Update the constructor
-    public UserProfileService(DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorSpecialityRepository specialityRepository, DoctorScheduleRepository doctorScheduleRepository, WebClient.Builder webClientBuilder) {
+    public UserProfileService(DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorSpecialityRepository specialityRepository, DoctorSlotRepository doctorSlotRepository, WebClient.Builder webClientBuilder) {
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.specialityRepository = specialityRepository;
-        this.doctorScheduleRepository = doctorScheduleRepository; // <-- Add this
+        this.doctorSlotRepository = doctorSlotRepository;
         this.webClientBuilder = webClientBuilder;
     }
 
+    // --- PROFILE MANAGEMENT ---
     public Doctor createDoctorProfile(CreateDoctorProfileDto dto) {
         Doctor doctor = new Doctor();
         doctor.setUserId(dto.userId());
@@ -59,25 +55,7 @@ public class UserProfileService {
         return patientRepository.save(patient);
     }
 
-    public Optional<?> getProfileByUserId(UUID userId) {
-        Optional<Doctor> doctorOpt = doctorRepository.findById(userId);
-        if (doctorOpt.isPresent()) {
-            Doctor doctor = doctorOpt.get();
-            UserDto userDto = webClientBuilder.build().post()
-                    .uri("http://AUTH-SERVICE/api/users/details")
-                    .body(Mono.just(List.of(doctor.getUserId())), List.class)
-                    .retrieve()
-                    .bodyToFlux(UserDto.class)
-                    .blockFirst();
-
-            if (userDto != null) {
-                return Optional.of(new DoctorDetailDto(doctor, userDto.fullName(), userDto.email()));
-            }
-            return Optional.of(new DoctorDetailDto(doctor, null, null));
-        }
-        return patientRepository.findById(userId);
-    }
-
+    // --- SPECIALITY MANAGEMENT ---
     public DoctorSpeciality createSpeciality(CreateSpecialityDto dto) {
         DoctorSpeciality speciality = new DoctorSpeciality();
         speciality.setName(dto.name());
@@ -87,6 +65,37 @@ public class UserProfileService {
 
     public List<DoctorSpeciality> getAllSpecialities() {
         return specialityRepository.findAll();
+    }
+
+    // --- SLOT MANAGEMENT ---
+    public DoctorSlot addDoctorSlot(DoctorSlotDto dto) {
+        DoctorSlot slot = new DoctorSlot();
+        slot.setDoctorId(dto.doctorId());
+        slot.setSlotTime(dto.slotTime());
+        slot.setBooked(false);
+        return doctorSlotRepository.save(slot);
+    }
+
+    public List<DoctorSlot> getDoctorAvailableSlots(UUID doctorId) {
+        return doctorSlotRepository.findByDoctorIdAndIsBookedFalseAndSlotTimeAfterOrderBySlotTimeAsc(doctorId, Instant.now());
+    }
+
+    @Transactional
+    public DoctorSlot bookSlot(UUID slotId) {
+        DoctorSlot slot = doctorSlotRepository.findByIdAndIsBookedFalse(slotId)
+                .orElseThrow(() -> new RuntimeException("Slot is not available or does not exist."));
+        slot.setBooked(true);
+        return doctorSlotRepository.save(slot);
+    }
+
+    // --- DATA AGGREGATION / FETCHING ---
+    public Optional<?> getProfileByUserId(UUID userId) {
+        Optional<Doctor> doctorOpt = doctorRepository.findById(userId);
+        if (doctorOpt.isPresent()) {
+            return Optional.of(enrichDoctorWithUserDetails(doctorOpt.get()));
+        }
+        // If not a doctor, try to find a patient profile
+        return patientRepository.findById(userId);
     }
 
     public List<DoctorDetailDto> findDoctors(Integer specialityId) {
@@ -99,34 +108,30 @@ public class UserProfileService {
         }
 
         List<UUID> userIds = doctors.stream().map(Doctor::getUserId).toList();
-        Map<UUID, UserDto> userDtoMap = webClientBuilder.build().post()
+        Map<UUID, UserDto> userDtoMap = fetchUserDetails(userIds);
+
+        return doctors.stream()
+                .map(doctor -> {
+                    UserDto user = userDtoMap.get(doctor.getUserId());
+                    return new DoctorDetailDto(doctor, user != null ? user.fullName() : "N/A", user != null ? user.email() : "N/A");
+                })
+                .collect(Collectors.toList());
+    }
+
+    // --- PRIVATE HELPER METHODS ---
+    private DoctorDetailDto enrichDoctorWithUserDetails(Doctor doctor) {
+        Map<UUID, UserDto> userMap = fetchUserDetails(List.of(doctor.getUserId()));
+        UserDto user = userMap.get(doctor.getUserId());
+        return new DoctorDetailDto(doctor, user != null ? user.fullName() : "N/A", user != null ? user.email() : "N/A");
+    }
+
+    private Map<UUID, UserDto> fetchUserDetails(List<UUID> userIds) {
+        return webClientBuilder.build().post()
                 .uri("http://AUTH-SERVICE/api/users/details")
                 .body(Mono.just(userIds), List.class)
                 .retrieve()
                 .bodyToFlux(UserDto.class)
                 .collectMap(UserDto::id)
                 .block();
-
-        return doctors.stream()
-                .map(doctor -> {
-                    UserDto user = userDtoMap.get(doctor.getUserId());
-                    return new DoctorDetailDto(doctor, user != null ? user.fullName() : null, user != null ? user.email() : null);
-                })
-                .collect(Collectors.toList());
-    }
-
-    // --- NEW METHODS FOR DOCTOR SCHEDULE ---
-
-    public DoctorSchedule setDoctorSchedule(DoctorScheduleDto dto) {
-        DoctorSchedule schedule = new DoctorSchedule();
-        schedule.setDoctorId(dto.doctorId());
-        schedule.setDayOfWeek(dto.dayOfWeek());
-        schedule.setStartTime(dto.startTime());
-        schedule.setEndTime(dto.endTime());
-        return doctorScheduleRepository.save(schedule);
-    }
-
-    public List<DoctorSchedule> getDoctorSchedule(UUID doctorId) {
-        return doctorScheduleRepository.findByDoctorId(doctorId);
     }
 }

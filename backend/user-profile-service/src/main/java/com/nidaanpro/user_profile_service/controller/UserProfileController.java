@@ -32,8 +32,9 @@ public class UserProfileController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getProfileByUserId(@PathVariable UUID userId) {
+        // This method will now exist in the service
         return userProfileService.getProfileByUserId(userId)
-                .map(profile -> ResponseEntity.ok(profile))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -19,4 +20,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
             @Param("userId1") UUID userId1,
             @Param("userId2") UUID userId2
     );
+
+    List<Appointment> findByPatientIdOrderByAppointmentTimeDesc(UUID patientId);
+
+
 }
