@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GatewayConfig {
 
-    @Bean
-    public AuthenticationFilter authenticationFilter(RouteValidator validator, JwtUtil jwtUtil) {
-        return new AuthenticationFilter(validator, jwtUtil);
-    }
+//    @Bean
+//    public AuthenticationFilter authenticationFilter(RouteValidator validator, JwtUtil jwtUtil) {
+//        return new AuthenticationFilter(validator, jwtUtil);
+//    }
 }
