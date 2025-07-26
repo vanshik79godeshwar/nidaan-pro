@@ -22,12 +22,13 @@ public class AuthenticationFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // --- ADD THIS BLOCK TO ALLOW CORS PREFLIGHT REQUESTS ---
-        if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
-            exchange.getResponse().setStatusCode(HttpStatus.OK);
-            return Mono.empty();
-        }
-        // ----------------------------------------------------
+        // REMOVE THIS ENTIRE BLOCK
+    /*
+    if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+        exchange.getResponse().setStatusCode(HttpStatus.OK);
+        return Mono.empty();
+    }
+    */
 
         if (validator.isSecured.test(exchange.getRequest())) {
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {

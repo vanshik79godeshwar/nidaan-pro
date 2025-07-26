@@ -6,6 +6,9 @@ spring:
     name: service-registry
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     register-with-eureka: false # It's a server, not a client, so it shouldn't register itself
     fetch-registry: false # It doesn't need to fetch a registry from another server

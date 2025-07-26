@@ -13,8 +13,8 @@ public class RouteValidator {
             "/api/auth/register", // Wildcard will cover /request-otp and /verify
             "/api/auth/login",
             "/api/auth/forgot-password", // <-- ADD THIS
-            "/api/auth/reset-password"  // <-- AND ADD THIS
-            
+            "/api/auth/reset-password",  // <-- AND ADD THIS
+            "/ws"
     );
 
     public Predicate<ServerHttpRequest> isSecured =
