@@ -22,15 +22,10 @@ spring:
           predicates:
             - Path=/api/consultations/**
 
-        - id: chat-service-http
+        - id: chat-service
           uri: lb://CHAT-SERVICE
           predicates:
-            - Path=/api/chat/**
-
-        - id: chat-service-ws
-          uri: lb:ws://CHAT-SERVICE
-          predicates:
-            - Path=/ws/**
+            - Path=/api/chat/**, /ws/**
 
 eureka:
   instance:

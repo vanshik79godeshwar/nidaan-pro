@@ -20,51 +20,51 @@ export function useWebSocket(recipientId: string | null) {
     // Use a ref to hold the client instance. This is the main fix.
     const stompClientRef = useRef<Client | null>(null);
 
-    useEffect(() => {
-        if (!token || !user || !recipientId) return;
+    // In frontend/src/hooks/useWebSocket.ts
 
-        // Prevent multiple connections
-        if (stompClientRef.current) {
-            return;
-        }
+  useEffect(() => {
+    if (!token || !user || !recipientId) {
+      return;
+    }
 
-        const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:9000/ws'),
-            connectHeaders: {
-                Authorization: `Bearer ${token}`,
-            },
-            debug: (str) => {
-                console.log('STOMP: ', str);
-            },
-            reconnectDelay: 5000,
-        });
+    // Create a new client instance on every effect run
+    const client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:9000/ws'),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      debug: (str) => {
+        console.log('STOMP: ', str);
+      },
+      reconnectDelay: 5000,
+    });
 
-        client.onConnect = (frame) => {
-            console.log('Connected to WebSocket: ' + frame);
-            // Subscribe to personal queue for incoming messages
-            client.subscribe(`/user/${user.id}/queue/messages`, (message: IMessage) => {
-                const newMessage = JSON.parse(message.body) as ChatMessage;
-                setMessages((prevMessages) => [...prevMessages, newMessage]);
-            });
-        };
+    client.onConnect = (frame) => {
+      console.log('Connected to WebSocket: ' + frame.headers['user-name']);
+      
+      // Subscribe to personal queue for incoming messages
+      // Note: We use the user-name from the frame headers which is the authenticated user's ID
+      client.subscribe(`/user/${frame.headers['user-name']}/queue/messages`, (message) => {
+        const newMessage = JSON.parse(message.body) as ChatMessage;
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      });
+    };
 
-        client.onStompError = (frame) => {
-            console.error('Broker reported error: ' + frame.headers['message']);
-            console.error('Additional details: ' + frame.body);
-        };
+    client.onStompError = (frame) => {
+      console.error('Broker reported error: ' + frame.headers['message']);
+      console.error('Additional details: ' + frame.body);
+    };
 
-        client.activate();
-        stompClientRef.current = client;
+    // Activate the client
+    client.activate();
 
-        return () => {
-            if (stompClientRef.current) {
-                stompClientRef.current.deactivate();
-                stompClientRef.current = null;
-                console.log('WebSocket disconnected');
-            }
-        };
-    }, [token, user, recipientId]);
-
+    // The cleanup function will run when the component unmounts or dependencies change
+    return () => {
+      client.deactivate();
+      console.log('STOMP client deactivated');
+    };
+  }, [token, user, recipientId]); // Dependencies remain the same
+  
     const sendMessage = (content: string) => {
         // Check the ref's current value AND if it's connected
         if (stompClientRef.current && stompClientRef.current.connected && user && recipientId) {

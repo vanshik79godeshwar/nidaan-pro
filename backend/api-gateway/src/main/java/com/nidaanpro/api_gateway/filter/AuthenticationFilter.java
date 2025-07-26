@@ -5,7 +5,7 @@ import com.nidaanpro.api_gateway.util.RouteValidator;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod; // <-- IMPORT THIS
+import org.springframework.http.HttpMethod; // Make sure this is imported
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -22,13 +22,11 @@ public class AuthenticationFilter implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        // REMOVE THIS ENTIRE BLOCK
-    /*
-    if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
-        exchange.getResponse().setStatusCode(HttpStatus.OK);
-        return Mono.empty();
-    }
-    */
+        // UNCOMMENT THIS ENTIRE BLOCK TO FIX THE ISSUE
+        if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+            exchange.getResponse().setStatusCode(HttpStatus.OK);
+            return Mono.empty();
+        }
 
         if (validator.isSecured.test(exchange.getRequest())) {
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {

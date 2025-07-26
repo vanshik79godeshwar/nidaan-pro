@@ -10,16 +10,17 @@ import java.util.function.Predicate;
 public class RouteValidator {
 
     public static final List<String> openApiEndpoints = List.of(
-            "/api/auth/register", // Wildcard will cover /request-otp and /verify
+            "/api/auth/register",
             "/api/auth/login",
-            "/api/auth/forgot-password", // <-- ADD THIS
-            "/api/auth/reset-password",  // <-- AND ADD THIS
-            "/ws"
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+            "/ws/" // CHANGE THIS TO A WILDCARD
     );
 
     public Predicate<ServerHttpRequest> isSecured =
             request -> openApiEndpoints
                     .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+                    // UPDATE THE LOGIC TO USE startsWith for the /ws endpoint
+                    .noneMatch(uri -> request.getURI().getPath().startsWith(uri));
 
 }
