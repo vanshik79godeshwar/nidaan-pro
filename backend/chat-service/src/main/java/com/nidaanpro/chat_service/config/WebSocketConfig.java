@@ -27,13 +27,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // REMOVE .setAllowedOriginPatterns("*") FROM THIS CHAIN
+        // Endpoint for clients that support raw WebSockets (like Postman)
+        registry.addEndpoint("/ws-raw")
+                .setAllowedOrigins("http://localhost:3000"); // Allow frontend origin
+
+        // Endpoint for clients that need the SockJS fallback (like your frontend)
         registry.addEndpoint("/ws")
-//                .setAllowedOrigins("http://localhost:3000")
+                .setAllowedOrigins("http://localhost:3000")
                 .withSockJS();
     }
 
-    // This method registers our security interceptor
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(authChannelInterceptor);

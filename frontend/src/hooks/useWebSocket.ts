@@ -27,7 +27,7 @@ export function useWebSocket(recipientId: string | null) {
         if (!clientRef.current) {
             console.log("Creating new STOMP client instance...");
             const client = new Client({
-                webSocketFactory: () => new SockJS('http://localhost:9000/ws'),
+                webSocketFactory: () => new SockJS('http://localhost:9001/ws'),
                 connectHeaders: { Authorization: `Bearer ${token}` },
                 debug: (str) => console.log(`STOMP: ${str}`),
                 reconnectDelay: 5000,
