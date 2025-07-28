@@ -1,19 +1,13 @@
-# application.yml in api-gateway
-
 server:
   port: 9000
 
 spring:
   application:
     name: api-gateway
-  # ADD THIS LINE TO IMPORT YOUR SECRETS
   config:
     import: "optional:classpath:application-secrets.properties"
   cloud:
     gateway:
-      forwarded:
-        enabled: true
-      # ... rest of the file remains the same
       routes:
         - id: auth-service
           uri: lb://AUTH-SERVICE
@@ -29,16 +23,20 @@ spring:
           uri: lb://CONSULTATION-SERVICE
           predicates:
             - Path=/api/consultations/**
-#
-#        - id: chat-service-websocket
-#          uri: lb:ws://CHAT-SERVICE
-#          predicates:
-#            - Path=/ws/**
-#          filters:
-#            # This is the crucial fix:
-#            # It forces the gateway to use the 'ws' scheme for the downstream request.
-#            - SetScheme=ws
-#
+
+        - id: chat-service-websocket
+          # This is the new approach. We use the HTTP scheme for discovery...
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=/ws/**
+          filters:
+            # ...and then rewrite the path to force the WS protocol.
+            # This explicitly tells the gateway to forward to a WebSocket endpoint.
+            - name: RewritePath
+              args:
+                regexp: "/ws/(?<segment>.*)"
+                replacement: "/ws/${segment}"
+
         - id: chat-service-rest
           uri: lb://CHAT-SERVICE
           predicates:
@@ -49,7 +47,6 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
-# The 'jwt.secret' placeholder will now be resolved from the imported file
 jwt:
   secret: ${jwt.secret}
 
