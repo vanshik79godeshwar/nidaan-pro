@@ -29,12 +29,16 @@ spring:
           uri: lb://CONSULTATION-SERVICE
           predicates:
             - Path=/api/consultations/**
-
-        - id: chat-service-websocket
-          uri: lb:ws://CHAT-SERVICE
-          predicates:
-            - Path=/ws/**
-
+#
+#        - id: chat-service-websocket
+#          uri: lb:ws://CHAT-SERVICE
+#          predicates:
+#            - Path=/ws/**
+#          filters:
+#            # This is the crucial fix:
+#            # It forces the gateway to use the 'ws' scheme for the downstream request.
+#            - SetScheme=ws
+#
         - id: chat-service-rest
           uri: lb://CHAT-SERVICE
           predicates:
