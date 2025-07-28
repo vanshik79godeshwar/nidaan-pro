@@ -23,8 +23,7 @@ export function useWebSocket(recipientId: string | null) {
             return;
         }
 
-        // This check is the key: only create a client if the ref is empty.
-        // This prevents the double-invocation bug in Strict Mode.
+        // This logic correctly handles React Strict Mode by ensuring only one client is active.
         if (!clientRef.current) {
             console.log("Creating new STOMP client instance...");
             const client = new Client({
@@ -60,7 +59,7 @@ export function useWebSocket(recipientId: string | null) {
     }, [token, user, recipientId]);
 
     const sendMessage = (content: string) => {
-        if (clientRef.current && clientRef.current.connected && user && recipientId) {
+        if (clientRef.current?.connected && user && recipientId) {
             const chatMessage = {
                 senderId: user.id,
                 recipientId: recipientId,
