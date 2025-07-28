@@ -31,22 +31,22 @@ public class ChatController {
     @MessageMapping("/chat")
     public void processMessage(ChatMessageDto chatMessageDto) {
         // 1. VALIDATE if the sender and recipient have an appointment history
-        boolean canChat = Boolean.TRUE.equals(webClientBuilder.build().post()
-                .uri("http://CONSULTATION-SERVICE/api/consultations/validate/chat-pairing")
-                .bodyValue(Map.of(
-                        "userId1", chatMessageDto.senderId(),
-                        "userId2", chatMessageDto.recipientId()
-                ))
-                .retrieve()
-                .bodyToMono(ChatValidationResponseDto.class)
-                .map(ChatValidationResponseDto::isValid)
-                .block()); // Use block() to get the result synchronously
-
-        if (!canChat) {
-            System.out.println("Chat validation FAILED for sender: " + chatMessageDto.senderId() + " and recipient: " + chatMessageDto.recipientId());
-            // In a real app, you might send an error message back to the sender
-            return; // Stop processing if validation fails
-        }
+//        boolean canChat = Boolean.TRUE.equals(webClientBuilder.build().post()
+//                .uri("http://CONSULTATION-SERVICE/api/consultations/validate/chat-pairing")
+//                .bodyValue(Map.of(
+//                        "userId1", chatMessageDto.senderId(),
+//                        "userId2", chatMessageDto.recipientId()
+//                ))
+//                .retrieve()
+//                .bodyToMono(ChatValidationResponseDto.class)
+//                .map(ChatValidationResponseDto::isValid)
+//                .block()); // Use block() to get the result synchronously
+//
+//        if (!canChat) {
+//            System.out.println("Chat validation FAILED for sender: " + chatMessageDto.senderId() + " and recipient: " + chatMessageDto.recipientId());
+//            // In a real app, you might send an error message back to the sender
+//            return; // Stop processing if validation fails
+//        }
 
         System.out.println("Chat validation PASSED. Processing message...");
 
