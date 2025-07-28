@@ -13,14 +13,19 @@ public class RouteValidator {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/forgot-password",
-            "/api/auth/reset-password",
-            "/ws/" // CHANGE THIS TO A WILDCARD
+            "/api/auth/reset-password"
     );
 
     public Predicate<ServerHttpRequest> isSecured =
-            request -> openApiEndpoints
-                    .stream()
-                    // UPDATE THE LOGIC TO USE startsWith for the /ws endpoint
-                    .noneMatch(uri -> request.getURI().getPath().startsWith(uri));
+            request -> {
+                // If the path starts with /ws/, it is NOT secured
+                if (request.getURI().getPath().startsWith("/ws/")) {
+                    return false;
+                }
+                // Otherwise, check against the list of open API endpoints
+                return openApiEndpoints
+                        .stream()
+                        .noneMatch(uri -> request.getURI().getPath().startsWith(uri));
+            };
 
 }
