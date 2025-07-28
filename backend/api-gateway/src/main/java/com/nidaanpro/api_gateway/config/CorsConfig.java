@@ -1,3 +1,5 @@
+// CorsConfig.java in api-gateway
+
 package com.nidaanpro.api_gateway.config;
 
 import org.springframework.context.annotation.Bean;
@@ -14,7 +16,8 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        // Use addAllowedOriginPattern instead of setAllowedOrigins
+        config.addAllowedOriginPattern("http://localhost:3000");
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
