@@ -11,6 +11,8 @@ spring:
     import: "optional:classpath:application-secrets.properties"
   cloud:
     gateway:
+      forwarded:
+        enabled: true
       # ... rest of the file remains the same
       routes:
         - id: auth-service
