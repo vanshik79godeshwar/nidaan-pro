@@ -6,21 +6,6 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      # This default-filter is crucial. It adds the X-Forwarded headers
-      # to every request that passes through the gateway.
-      default-filters:
-        - AddResponseHeader=X-Content-Type-Options, nosniff
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "http://localhost:3000"
-            allowedHeaders: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
       routes:
         - id: auth-service
           uri: lb://AUTH-SERVICE
@@ -38,15 +23,20 @@ spring:
             - Path=/api/consultations/**
 
         - id: chat-service
-          # The lb:ws:// scheme is critical for WebSocket load balancing
+          # This is the crucial line for WebSocket load balancing
           uri: lb:ws://CHAT-SERVICE
           predicates:
-            - Path=/api/chat/**, /ws/**
+            - Path=/ws/**
+
+        - id: chat-service-rest
+          # A separate route for any potential REST endpoints in chat-service
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=/api/chat/**
 
 eureka:
   instance:
     hostname: localhost
-    prefer-ip-address: false
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
@@ -57,4 +47,4 @@ jwt:
 logging:
   level:
     org.springframework.cloud.gateway: TRACE
-    reactor.netty.http.client: TRACE # Added for more detailed logging
+    reactor.netty.http.client: TRACE
