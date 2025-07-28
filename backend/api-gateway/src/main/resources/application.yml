@@ -6,6 +6,21 @@ spring:
     name: api-gateway
   cloud:
     gateway:
+      # This default-filter is crucial. It adds the X-Forwarded headers
+      # to every request that passes through the gateway.
+      default-filters:
+        - AddResponseHeader=X-Content-Type-Options, nosniff
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
       routes:
         - id: auth-service
           uri: lb://AUTH-SERVICE
@@ -23,7 +38,8 @@ spring:
             - Path=/api/consultations/**
 
         - id: chat-service
-          uri: lb://CHAT-SERVICE
+          # The lb:ws:// scheme is critical for WebSocket load balancing
+          uri: lb:ws://CHAT-SERVICE
           predicates:
             - Path=/api/chat/**, /ws/**
 
@@ -41,3 +57,4 @@ jwt:
 logging:
   level:
     org.springframework.cloud.gateway: TRACE
+    reactor.netty.http.client: TRACE # Added for more detailed logging
