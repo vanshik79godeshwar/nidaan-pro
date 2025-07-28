@@ -1,11 +1,17 @@
+# application.yml in api-gateway
+
 server:
   port: 9000
 
 spring:
   application:
     name: api-gateway
+  # ADD THIS LINE TO IMPORT YOUR SECRETS
+  config:
+    import: "optional:classpath:application-secrets.properties"
   cloud:
     gateway:
+      # ... rest of the file remains the same
       routes:
         - id: auth-service
           uri: lb://AUTH-SERVICE
@@ -22,27 +28,24 @@ spring:
           predicates:
             - Path=/api/consultations/**
 
-        - id: chat-service
-          # This is the crucial line for WebSocket load balancing
+        - id: chat-service-websocket
           uri: lb:ws://CHAT-SERVICE
           predicates:
             - Path=/ws/**
 
         - id: chat-service-rest
-          # A separate route for any potential REST endpoints in chat-service
           uri: lb://CHAT-SERVICE
           predicates:
             - Path=/api/chat/**
 
 eureka:
-  instance:
-    hostname: localhost
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
 
+# The 'jwt.secret' placeholder will now be resolved from the imported file
 jwt:
-  secret: your-super-secret-long-random-string-for-nidaan-pro
+  secret: ${jwt.secret}
 
 logging:
   level:
