@@ -12,9 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ConsultationService {
@@ -75,11 +74,24 @@ public class ConsultationService {
     @Transactional
     public PreConsultationReport submitPreConsultationReport(SubmitReportDto dto) {
         Appointment appointment = appointmentRepository.findById(dto.appointmentId())
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + dto.appointmentId()));
 
-        PreConsultationReport report = new PreConsultationReport();
+        PreConsultationReport report = reportRepository.findByAppointmentId(dto.appointmentId())
+                .orElse(new PreConsultationReport());
+
         report.setAppointmentId(dto.appointmentId());
-        report.setProblemBrief(dto.problemBrief());
+
+        // --- THIS IS THE FIX: Set the old field to satisfy the database ---
+        report.setProblemBrief(dto.chiefComplaint());
+
+        // Map all the new fields from the DTO
+        report.setChiefComplaint(dto.chiefComplaint());
+        report.setStaticQuestions(dto.staticQuestions());
+        report.setDynamicQuestions(dto.dynamicQuestions());
+        report.setDetailedDescription(dto.detailedDescription());
+        report.setCurrentMedications(dto.currentMedications());
+        report.setAttachmentUrls(dto.attachmentUrls());
+
         PreConsultationReport savedReport = reportRepository.save(report);
 
         appointment.setStatus(Appointment.Status.READY);
@@ -121,5 +133,44 @@ public class ConsultationService {
                     return new AppointmentDetailDto(appointment, doctor);
                 })
                 .toList();
+    }
+
+    public List<DoctorAppointmentDetailDto> getAppointmentsForDoctor(UUID doctorId) {
+        List<Appointment> appointments = appointmentRepository.findByDoctorIdOrderByAppointmentTimeDesc(doctorId);
+        if (appointments.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<UUID> patientIds = appointments.stream().map(Appointment::getPatientId).distinct().toList();
+
+        Map<UUID, PatientDetailDto> patientDetailsMap = webClientBuilder.build().post()
+                .uri("http://AUTH-SERVICE/api/users/details")
+                .bodyValue(patientIds)
+                .retrieve()
+                .bodyToFlux(PatientDetailDto.class)
+                .collectMap(PatientDetailDto::id)
+                .block();
+
+        // This is the crucial change: We ensure that we only create DTOs for appointments
+        // where we successfully found the corresponding patient details.
+        return appointments.stream()
+                .map(appointment -> {
+                    PatientDetailDto patient = patientDetailsMap.get(appointment.getPatientId());
+                    // If the patient details are not found for any reason, return null
+                    if (patient == null) {
+                        return null;
+                    }
+                    return new DoctorAppointmentDetailDto(appointment, patient);
+                })
+                .filter(Objects::nonNull) // This line removes all the null entries from the list
+                .collect(Collectors.toList());
+    }
+
+    public List<UUID> findChatPartners(UUID userId) {
+        return appointmentRepository.findDistinctChatPartnersByUserId(userId);
+    }
+
+    public PreConsultationReport getReportByAppointmentId(UUID appointmentId) {
+        return reportRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Report not found for appointment ID: " + appointmentId));
     }
 }

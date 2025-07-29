@@ -1,6 +1,7 @@
+// frontend/src/app/chat/[id]/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react'; // <-- Import useEffect and useRef
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -14,6 +15,21 @@ function ChatPage() {
     const { user } = useAuth();
     const { messages, sendMessage } = useWebSocket(recipientId);
     const [newMessage, setNewMessage] = useState('');
+
+    // --- FIX FOR AUTO-SCROLL ---
+    // 1. Create a ref to attach to the scrollable message container
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    // 2. Create a function to scroll to the bottom
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    // 3. Use useEffect to scroll whenever the messages array changes
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+    // -------------------------
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,6 +65,8 @@ function ChatPage() {
                         </div>
                     </div>
                 ))}
+                {/* Add this empty div at the end of the messages list */}
+                <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input Form */}

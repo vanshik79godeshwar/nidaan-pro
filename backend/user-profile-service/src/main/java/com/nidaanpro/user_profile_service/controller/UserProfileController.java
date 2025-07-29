@@ -2,12 +2,14 @@ package com.nidaanpro.user_profile_service.controller;
 
 import com.nidaanpro.user_profile_service.dto.CreateDoctorProfileDto;
 import com.nidaanpro.user_profile_service.dto.CreatePatientProfileDto;
+import com.nidaanpro.user_profile_service.dto.UserDetailDto;
 import com.nidaanpro.user_profile_service.service.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -36,5 +38,12 @@ public class UserProfileController {
         return userProfileService.getProfileByUserId(userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/details")
+    public ResponseEntity<List<UserDetailDto>> getUserDetails(@RequestBody List<UUID> userIds) {
+        // This endpoint now exists and will delegate the work to the service
+        List<UserDetailDto> userDetails = userProfileService.findUserDetailsByIds(userIds);
+        return ResponseEntity.ok(userDetails);
     }
 }

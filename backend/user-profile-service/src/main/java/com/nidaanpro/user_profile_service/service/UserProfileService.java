@@ -9,10 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,13 +42,14 @@ public class UserProfileService {
     }
 
     public Patient createPatientProfile(CreatePatientProfileDto dto) {
-        Patient patient = new Patient();
+        Patient patient = patientRepository.findById(dto.userId()).orElse(new Patient());
         patient.setUserId(dto.userId());
         patient.setDateOfBirth(dto.dateOfBirth());
         if (dto.gender() != null) {
             patient.setGender(Patient.Gender.valueOf(dto.gender().toUpperCase()));
         }
         patient.setAddress(dto.address());
+        patient.setProfilePictureUrl(dto.profilePictureUrl()); // <-- ADD THIS LINE
         return patientRepository.save(patient);
     }
 
@@ -108,21 +106,41 @@ public class UserProfileService {
         }
 
         List<UUID> userIds = doctors.stream().map(Doctor::getUserId).toList();
+        // This now calls our new, correct method
         Map<UUID, UserDto> userDtoMap = fetchUserDetails(userIds);
 
         return doctors.stream()
                 .map(doctor -> {
                     UserDto user = userDtoMap.get(doctor.getUserId());
-                    return new DoctorDetailDto(doctor, user != null ? user.fullName() : "N/A", user != null ? user.email() : "N/A");
+                    if (user != null) {
+                        return new DoctorDetailDto(doctor, user.fullName(), user.email());
+                    }
+                    return null;
                 })
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    // --- PRIVATE HELPER METHODS ---
+    // enrichDoctorWithUserDetails method
     private DoctorDetailDto enrichDoctorWithUserDetails(Doctor doctor) {
+        // This also calls our new, correct method
         Map<UUID, UserDto> userMap = fetchUserDetails(List.of(doctor.getUserId()));
         UserDto user = userMap.get(doctor.getUserId());
         return new DoctorDetailDto(doctor, user != null ? user.fullName() : "N/A", user != null ? user.email() : "N/A");
+    }
+
+    public List<UserDetailDto> findUserDetailsByIds(List<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // It now correctly calls the AUTH-SERVICE via the gateway
+        return webClientBuilder.build().post()
+                .uri("http://AUTH-SERVICE/api/users/details")
+                .bodyValue(userIds)
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .collectList()
+                .block(); // .block() to make the call synchronous
     }
 
     private Map<UUID, UserDto> fetchUserDetails(List<UUID> userIds) {
@@ -134,4 +152,6 @@ public class UserProfileService {
                 .collectMap(UserDto::id)
                 .block();
     }
+
+
 }

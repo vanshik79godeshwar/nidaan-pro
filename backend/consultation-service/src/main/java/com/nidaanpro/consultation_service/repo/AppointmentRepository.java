@@ -23,5 +23,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
 
     List<Appointment> findByPatientIdOrderByAppointmentTimeDesc(UUID patientId);
 
+    @Query("SELECT DISTINCT CASE WHEN a.patientId = :userId THEN a.doctorId ELSE a.patientId END FROM Appointment a WHERE a.patientId = :userId OR a.doctorId = :userId")
+    List<UUID> findDistinctChatPartnersByUserId(@Param("userId") UUID userId);
 
+
+    List<Appointment> findByDoctorIdOrderByAppointmentTimeDesc(UUID doctorId);
 }

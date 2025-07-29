@@ -1,3 +1,4 @@
+// backend/user-profile-service/src/main/java/com/nidaanpro/user_profile_service/model/Patient.java
 package com.nidaanpro.user_profile_service.model;
 
 import jakarta.persistence.*;
@@ -23,6 +24,9 @@ public class Patient {
     private String emergencyContactName;
 
     private String emergencyContactPhone;
+
+    // --- ADD THIS LINE ---
+    private String profilePictureUrl;
 
     public enum Gender {
         MALE,

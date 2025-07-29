@@ -2,8 +2,8 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import DoctorProfileForm from '@/components/dashboard/DoctorProfileForm'; // Note the clear name
-import PatientProfileForm from '@/components/dashboard/PatientProfileForm'; // Note the clear name
+import DoctorProfileForm from '@/components/dashboard/DoctorProfileForm';
+import PatientProfileForm from '@/components/dashboard/PatientProfileForm';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 function ProfilePage() {
@@ -13,12 +13,10 @@ function ProfilePage() {
     return <p>Loading...</p>;
   }
 
-  // This check is crucial. If there's no user, don't render anything.
   if (!user) {
     return null;
   }
 
-  // This is the core logic: check the role and render the correct component.
   return (
     <div>
       {user.role === 'DOCTOR' ? <DoctorProfileForm /> : <PatientProfileForm />}
@@ -26,7 +24,6 @@ function ProfilePage() {
   );
 }
 
-// The wrapper remains the same
 export default function ProtectedProfilePage() {
     return (
         <ProtectedRoute>

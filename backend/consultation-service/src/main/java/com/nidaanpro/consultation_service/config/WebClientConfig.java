@@ -8,6 +8,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
+    // This is now the ONLY WebClient.Builder bean.
+    // It is correctly configured for all your INTERNAL service-to-service calls.
     @Bean
     @LoadBalanced
     public WebClient.Builder loadBalancedWebClientBuilder() {

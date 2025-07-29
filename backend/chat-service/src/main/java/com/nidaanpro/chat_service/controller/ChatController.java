@@ -10,12 +10,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Controller
+@RestController
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -31,22 +33,22 @@ public class ChatController {
     @MessageMapping("/chat")
     public void processMessage(ChatMessageDto chatMessageDto) {
         // 1. VALIDATE if the sender and recipient have an appointment history
-//        boolean canChat = Boolean.TRUE.equals(webClientBuilder.build().post()
-//                .uri("http://CONSULTATION-SERVICE/api/consultations/validate/chat-pairing")
-//                .bodyValue(Map.of(
-//                        "userId1", chatMessageDto.senderId(),
-//                        "userId2", chatMessageDto.recipientId()
-//                ))
-//                .retrieve()
-//                .bodyToMono(ChatValidationResponseDto.class)
-//                .map(ChatValidationResponseDto::isValid)
-//                .block()); // Use block() to get the result synchronously
-//
-//        if (!canChat) {
-//            System.out.println("Chat validation FAILED for sender: " + chatMessageDto.senderId() + " and recipient: " + chatMessageDto.recipientId());
-//            // In a real app, you might send an error message back to the sender
-//            return; // Stop processing if validation fails
-//        }
+        boolean canChat = Boolean.TRUE.equals(webClientBuilder.build().post()
+                .uri("http://CONSULTATION-SERVICE/api/consultations/validate/chat-pairing")
+                .bodyValue(Map.of(
+                        "userId1", chatMessageDto.senderId(),
+                        "userId2", chatMessageDto.recipientId()
+                ))
+                .retrieve()
+                .bodyToMono(ChatValidationResponseDto.class)
+                .map(ChatValidationResponseDto::isValid)
+                .block()); // Use block() to get the result synchronously
+
+        if (!canChat) {
+            System.out.println("Chat validation FAILED for sender: " + chatMessageDto.senderId() + " and recipient: " + chatMessageDto.recipientId());
+            // In a real app, you might send an error message back to the sender
+            return; // Stop processing if validation fails
+        }
 
         System.out.println("Chat validation PASSED. Processing message...");
 
@@ -89,5 +91,12 @@ public class ChatController {
             System.out.println("--- RESULT: INVALID ---");
             return ResponseEntity.status(403).body("INVALID: These users are NOT allowed to chat.");
         }
+    }
+
+    @GetMapping("/api/chat/history")
+    public ResponseEntity<List<ChatMessage>> getChatHistory(@RequestParam UUID userId1, @RequestParam UUID userId2) {
+        return ResponseEntity.ok(
+                chatMessageRepository.findBySenderIdAndRecipientIdOrRecipientIdAndSenderIdOrderByTimestampAsc(userId1, userId2, userId1, userId2)
+        );
     }
 }

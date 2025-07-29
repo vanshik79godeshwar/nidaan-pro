@@ -1,16 +1,15 @@
-'use client'; // <-- Add this line at the top
+// frontend/src/app/layout.tsx
+'use client'; 
 
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
-import { usePathname } from "next/navigation"; // <-- Import usePathname
+import { usePathname } from "next/navigation";
+import Script from 'next/script'; // Import the Next.js Script component
 
 const inter = Inter({ subsets: ["latin"] });
-
-// Metadata can be exported separately in new Next.js versions
-// export const metadata = { ... };
 
 export default function RootLayout({
   children,
@@ -23,12 +22,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
+        {/* Add the Razorpay script here */}
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
+        
         <AuthProvider>
-          {!isDashboard && <Header />} {/* Conditionally render Header */}
+          {!isDashboard && <Header />}
           <main className={`flex-grow ${!isDashboard ? 'container mx-auto px-6 py-8' : ''}`}>
             {children}
           </main>
-          {!isDashboard && <Footer />} {/* Conditionally render Footer */}
+          {!isDashboard && <Footer />}
         </AuthProvider>
       </body>
     </html>

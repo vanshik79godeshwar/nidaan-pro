@@ -19,6 +19,7 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    // This is the endpoint that other services will call.
     @PostMapping("/details")
     public ResponseEntity<List<UserDto>> getUserDetails(@RequestBody List<UUID> userIds) {
         List<UserDto> userDtos = userRepository.findByIdIn(userIds).stream()

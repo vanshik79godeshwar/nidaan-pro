@@ -9,6 +9,11 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: ai-service-local
+          uri: http://localhost:9000 # Route to the gateway itself
+          predicates:
+            - Path=/api/ai/**
+
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
@@ -23,6 +28,11 @@ spring:
           uri: lb://CONSULTATION-SERVICE
           predicates:
             - Path=/api/consultations/**
+
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payments/**
 
         - id: chat-service-websocket
           # This is the new approach. We use the HTTP scheme for discovery...
@@ -43,6 +53,9 @@ spring:
             - Path=/api/chat/**
 
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka

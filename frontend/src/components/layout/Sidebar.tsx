@@ -6,14 +6,17 @@ import { usePathname } from 'next/navigation';
 // Define the links that will appear in the sidebar
 const patientLinks = [
   { href: '/dashboard', label: 'Overview' },
-  { href: '/doctors', label: 'Find a Doctor' },
+  { href: '/dashboard/profile', label: 'My Profile' },
   { href: '/dashboard/appointments', label: 'My Appointments' },
+  { href: '/dashboard/messages', label: 'Messages' },
 ];
 
 const doctorLinks = [
   { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard/appointments', label: 'My Appointments' },
   { href: '/dashboard/profile', label: 'My Profile' },
   { href: '/dashboard/schedule', label: 'My Schedule' },
+  { href: '/dashboard/messages', label: 'Messages' },
 ];
 
 export default function Sidebar() {
