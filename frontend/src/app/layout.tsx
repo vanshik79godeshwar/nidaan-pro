@@ -1,4 +1,3 @@
-// frontend/src/app/layout.tsx
 'use client'; 
 
 import { Inter } from "next/font/google";
@@ -7,7 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
-import Script from 'next/script'; // Import the Next.js Script component
+import { Toaster } from 'sonner'; // <-- Import the Toaster component
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,8 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
-        {/* Add the Razorpay script here */}
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
+        {/* --- ADD THIS COMPONENT --- */}
+        {/* It can be placed anywhere, but here is a good spot. */}
+        <Toaster position="top-right" richColors />
         
         <AuthProvider>
           {!isDashboard && <Header />}

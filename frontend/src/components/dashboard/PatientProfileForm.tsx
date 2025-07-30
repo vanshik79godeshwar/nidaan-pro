@@ -9,9 +9,10 @@ import Button from '@/components/ui/Button';
 import { PatientProfile } from '@/types';
 import ImageUploader from '@/components/ui/ImageUploader';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function PatientProfileForm() {
-    const { user, token } = useAuth();
+    const { user, token, login } = useAuth();
     const [profile, setProfile] = useState<Partial<PatientProfile>>({});
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,20 +42,38 @@ export default function PatientProfileForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage('');
         if (!user || !token) return;
 
-        try {
-            const payload = { userId: user.id, ...profile };
-            await api.post('/profiles/patient', payload, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setMessage('Profile updated successfully!');
-            setIsEditing(false);
-        } catch (error) {
-            console.error('Failed to save profile', error);
-            setMessage('Error updating profile.');
-        }
+        // This creates a promise that sonner can track
+        const promise = () => new Promise(async (resolve, reject) => {
+            try {
+                const payload = { userId: user.id, ...profile };
+                await api.post('/profiles/patient', payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                // After a successful save, we call login() again.
+                // This re-fetches the user data (including the new profile picture)
+                // and updates it everywhere in the app.
+                if (token) {
+                    await login(token);
+                }
+
+                setIsEditing(false);
+                setMessage('Profile updated successfully!');
+                resolve("Your profile has been updated successfully!");
+            } catch (error) {
+                console.error('Failed to save profile', error);
+                reject("Failed to update profile. Please try again.");
+            }
+        });
+
+        // This single line will show a loading, success, or error toast.
+        toast.promise(promise(), {
+            loading: 'Saving your profile...',
+            success: (message) => `${message}`,
+            error: (message) => `${message}`,
+        });
     };
     
     if (isLoading) return <p>Loading profile...</p>;

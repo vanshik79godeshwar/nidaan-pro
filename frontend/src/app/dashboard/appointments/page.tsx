@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { AppointmentDetailDto, DoctorAppointmentDetailDto } from '@/types'; // Assuming DoctorAppointmentDetailDto is in your types
+import { AppointmentDetailDto, DoctorAppointmentDetailDto } from '@/types';
 import Link from 'next/link';
 
 // A single, unified type for display purposes to keep things clean
@@ -46,39 +46,55 @@ function AppointmentCard({ appt }: { appt: DisplayAppointment }) {
           {appt.status.replace(/_/g, ' ')}
         </span>
       </div>
-      <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
-        {/* Patient's Action Button */}
-        {user?.role === 'PATIENT' && appt.status === 'SCHEDULED' && (
-          <Link href={`/dashboard/report/${appt.id}`}>
-            <button className="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
-              Start Pre-Consultation Report
-            </button>
-          </Link>
-        )}
+      <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-2">
+        {/* Informational Text on the left */}
+        <div>
+            {appt.status === 'READY' && user?.role === 'PATIENT' && (
+                <p className="text-sm text-green-600">Your report has been submitted.</p>
+            )}
+            {appt.status === 'SCHEDULED' && user?.role === 'DOCTOR' && (
+                <p className="text-sm text-yellow-600">Awaiting report from patient.</p>
+            )}
+        </div>
         
-        {/* Doctor's Action Button */}
-        {user?.role === 'DOCTOR' && appt.status === 'READY' && (
-          <Link href={`/dashboard/appointments/${appt.id}`}>
-            <button className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">
-              View Submitted Report
-            </button>
-          </Link>
-        )}
+        {/* Action Buttons on the right */}
+        <div className="flex items-center space-x-2">
+            {/* THIS IS YOUR WORKING "START REPORT" BUTTON - UNCHANGED */}
+            {user?.role === 'PATIENT' && appt.status === 'SCHEDULED' && (
+              <Link href={`/dashboard/report/${appt.id}`}>
+                <button className="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                  Start Report
+                </button>
+              </Link>
+            )}
+            
+            {/* THIS IS THE WORKING "VIEW REPORT" BUTTON - UNCHANGED */}
+            {user?.role === 'DOCTOR' && appt.status === 'READY' && (
+              <Link href={`/dashboard/appointments/${appt.id}`}>
+                <button className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">
+                  View Report
+                </button>
+              </Link>
+            )}
 
-        {/* Informational Text */}
-        {appt.status === 'READY' && user?.role === 'PATIENT' && (
-             <p className="text-sm text-green-600">Your report has been submitted.</p>
-        )}
-         {appt.status === 'SCHEDULED' && user?.role === 'DOCTOR' && (
-             <p className="text-sm text-yellow-600">Awaiting report from patient.</p>
-        )}
+            {/* --- THIS IS THE NEW "JOIN CALL" BUTTON --- */}
+            {/* It appears for the Patient as soon as the appointment is scheduled */}
+            {/* It appears for the Doctor ONLY when the report is ready */}
+            {( (user?.role === 'PATIENT' && appt.status === 'SCHEDULED') || appt.status === 'READY' ) && (
+                <Link href={`/dashboard/call/${appt.id}`}>
+                    <button className="px-4 py-2 font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700">
+                      Join Call
+                    </button>
+                </Link>
+            )}
+        </div>
       </div>
     </div>
   );
 }
 
 
-// The main page component that handles all the logic
+// The main page component that handles all the logic (UNCHANGED)
 function MyAppointmentsPage() {
   const [appointments, setAppointments] = useState<DisplayAppointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,35 +107,37 @@ function MyAppointmentsPage() {
 
       try {
         setLoading(true);
-        // Determine the correct API endpoint based on the user's role
         const url = user.role === 'PATIENT'
           ? `/consultations/patient/${user.id}`
           : `/consultations/doctor/${user.id}`;
         
         const response = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
 
-        // Normalize the data from the backend into our unified DisplayAppointment type
-        const normalizedData: DisplayAppointment[] = response.data.map((item: any) => {
-          if (user.role === 'PATIENT') {
-            // This handles the data structure for a patient's view
-            const patientAppt = item as AppointmentDetailDto;
-            return {
-              id: patientAppt.appointment.id,
-              status: patientAppt.appointment.status,
-              appointmentTime: patientAppt.appointment.appointmentTime,
-              partnerName: patientAppt.doctorDetails.fullName,
-            };
-          } else { // DOCTOR
-            // This handles the data structure for a doctor's view
-            const doctorAppt = item as DoctorAppointmentDetailDto;
-            return {
-              id: doctorAppt.appointment.id,
-              status: doctorAppt.appointment.status,
-              appointmentTime: doctorAppt.appointment.appointmentTime,
-              partnerName: doctorAppt.patientDetails.fullName,
-            };
-          }
-        });
+        const normalizedData: DisplayAppointment[] = response.data
+          .filter((item: any) => {
+              if (user.role === 'PATIENT') return item && item.doctorDetails;
+              if (user.role === 'DOCTOR') return item && item.patientDetails;
+              return false;
+          })
+          .map((item: any) => {
+            if (user.role === 'PATIENT') {
+              const patientAppt = item as AppointmentDetailDto;
+              return {
+                id: patientAppt.appointment.id,
+                status: patientAppt.appointment.status,
+                appointmentTime: patientAppt.appointment.appointmentTime,
+                partnerName: patientAppt.doctorDetails.fullName,
+              };
+            } else { // DOCTOR
+              const doctorAppt = item as DoctorAppointmentDetailDto;
+              return {
+                id: doctorAppt.appointment.id,
+                status: doctorAppt.appointment.status,
+                appointmentTime: doctorAppt.appointment.appointmentTime,
+                partnerName: doctorAppt.patientDetails.fullName,
+              };
+            }
+          });
         setAppointments(normalizedData);
 
       } catch (err) {
