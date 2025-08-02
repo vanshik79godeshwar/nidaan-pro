@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import Image from 'next/image';
+import { Download } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { downloadPdf } from '@/lib/pdfGenerator';
 
 // Type for the full report data from our backend
 interface PreConsultationReport {
@@ -36,6 +39,7 @@ function ViewReportPage() {
     const [report, setReport] = useState<PreConsultationReport | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const reportRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -55,6 +59,10 @@ function ViewReportPage() {
         fetchReport();
     }, [appointmentId, token]);
 
+    const handleDownload = () => {
+        downloadPdf('reportContent', `Pre-Consultation_Report_${appointmentId}`);
+    };
+
     if (loading) return <p>Loading report...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
     if (!report) return <p>No report found for this appointment.</p>;
@@ -64,48 +72,62 @@ function ViewReportPage() {
     const dynamicData = JSON.parse(report.dynamicQuestions || '[]');
 
     return (
-        <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Pre-Consultation Report</h1>
-            <p className="text-gray-500 mb-8">Submitted on: {new Date(report.createdAt).toLocaleString()}</p>
-
-            <ReportSection title="Chief Complaint">
-                <p className="text-xl font-semibold">{report.chiefComplaint}</p>
-            </ReportSection>
-
-            <ReportSection title="Symptom Analysis">
-                <p><strong>Duration:</strong> {staticData.symptomDuration}</p>
-                <p><strong>Severity:</strong> {staticData.symptomSeverity} / 10</p>
-                <p><strong>Makes it better:</strong> {staticData.makesBetter || 'N/A'}</p>
-                <p><strong>Makes it worse:</strong> {staticData.makesWorse || 'N/A'}</p>
-            </ReportSection>
-
-            {dynamicData && dynamicData.length > 0 && (
-                <ReportSection title="AI-Generated Follow-up">
-                    {dynamicData.map((qa: any, index: number) => (
-                        <p key={index}><strong>{qa.question}:</strong> {qa.answer}</p>
-                    ))}
-                </ReportSection>
-            )}
-            
-            <ReportSection title="Patient's Detailed Description">
-                <p className="whitespace-pre-wrap">{report.detailedDescription || 'N/A'}</p>
-            </ReportSection>
-
-            <ReportSection title="Current Medications">
-                <p className="whitespace-pre-wrap">{report.currentMedications || 'N/A'}</p>
-            </ReportSection>
-
-            {report.attachmentUrls && report.attachmentUrls.length > 0 && (
-                <ReportSection title="Attachments">
-                    <div className="flex flex-wrap gap-4">
-                        {report.attachmentUrls.map(url => (
-                            <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                                <Image src={url} alt="Attachment" width={150} height={150} className="rounded-lg object-cover border hover:opacity-80" />
-                            </a>
-                        ))}
+        <div ref={reportRef} className="max-w-4xl mx-auto">
+            <div id="reportContent" className="bg-white p-8 rounded-lg shadow-md">
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Pre-Consultation Report</h1>
+                        <p className="text-gray-500">Submitted on: {new Date(report.createdAt).toLocaleString()}</p>
                     </div>
+                    <h2 className="text-2xl font-bold text-blue-600">Nidaan Pro</h2>
+                </div>
+
+                <ReportSection title="Chief Complaint">
+                    <p className="text-xl font-semibold">{report.chiefComplaint}</p>
                 </ReportSection>
-            )}
+
+                <ReportSection title="Symptom Analysis">
+                    <p><strong>Duration:</strong> {staticData.symptomDuration}</p>
+                    <p><strong>Severity:</strong> {staticData.symptomSeverity} / 10</p>
+                    <p><strong>Makes it better:</strong> {staticData.makesBetter || 'N/A'}</p>
+                    <p><strong>Makes it worse:</strong> {staticData.makesWorse || 'N/A'}</p>
+                </ReportSection>
+
+                {dynamicData && dynamicData.length > 0 && (
+                    <ReportSection title="AI-Generated Follow-up">
+                        {dynamicData.map((qa: any, index: number) => (
+                            <p key={index}><strong>{qa.question}:</strong> {qa.answer}</p>
+                        ))}
+                    </ReportSection>
+                )}
+                
+                <ReportSection title="Patient's Detailed Description">
+                    <p className="whitespace-pre-wrap">{report.detailedDescription || 'N/A'}</p>
+                </ReportSection>
+
+                <ReportSection title="Current Medications">
+                    <p className="whitespace-pre-wrap">{report.currentMedications || 'N/A'}</p>
+                </ReportSection>
+
+                {report.attachmentUrls && report.attachmentUrls.length > 0 && (
+                    <ReportSection title="Attachments">
+                        <div className="flex flex-wrap gap-4">
+                            {report.attachmentUrls.map(url => (
+                                <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                                    <Image src={url} alt="Attachment" width={150} height={150} className="rounded-lg object-cover border hover:opacity-80" />
+                                </a>
+                            ))}
+                        </div>
+                    </ReportSection>
+                )}
+            </div>
+
+            <div className="mt-6 text-center">
+                <Button onClick={handleDownload} className="w-auto inline-flex items-center gap-2">
+                    <Download size={18} />
+                    Download as PDF
+                </Button>
+            </div>
         </div>
     );
 }

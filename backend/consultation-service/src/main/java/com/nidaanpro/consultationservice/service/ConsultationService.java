@@ -173,4 +173,71 @@ public class ConsultationService {
         return reportRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Report not found for appointment ID: " + appointmentId));
     }
+
+    public Optional<AppointmentStatusDto> getAppointmentStatus(UUID appointmentId) {
+        return appointmentRepository.findById(appointmentId)
+                .map(app -> new AppointmentStatusDto(app.getId(), app.getPatientId(), app.getStatus()));
+    }
+
+    @Transactional
+    public Appointment completeAppointment(UUID appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
+
+        // You could add logic here to ensure only doctors or involved patients can complete it
+        appointment.setStatus(Appointment.Status.COMPLETED);
+        return appointmentRepository.save(appointment);
+    }
+
+    @Transactional
+    public Appointment addDoctorNotes(UUID appointmentId, SubmitNotesDto dto) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
+
+        if (appointment.getStatus() != Appointment.Status.COMPLETED) {
+            throw new IllegalStateException("Notes can only be added to completed appointments.");
+        }
+
+        appointment.setDiagnosis(dto.diagnosis());
+        appointment.setDoctorNotes(dto.doctorNotes());
+        appointment.setPrescription(dto.prescription());
+
+        return appointmentRepository.save(appointment);
+    }
+
+    public Optional<AppointmentDetailDto> getAppointmentDetails(UUID appointmentId) {
+        return appointmentRepository.findById(appointmentId)
+                .map(appointment -> {
+                    // Fetch the doctor's details from the auth-service
+                    DoctorDetailDto doctorDetails = webClientBuilder.build().post()
+                            .uri("http://AUTH-SERVICE/api/users/details")
+                            .bodyValue(List.of(appointment.getDoctorId()))
+                            .retrieve()
+                            .bodyToFlux(DoctorDetailDto.class)
+                            .blockFirst(); // We expect only one result
+
+                    if (doctorDetails == null) {
+                        return null;
+                    }
+                    return new AppointmentDetailDto(appointment, doctorDetails);
+                });
+    }
+
+    public List<Appointment> getAppointmentHistory(UUID userId1, UUID userId2) {
+        // This will return a list of all appointments between the two users, sorted by most recent first.
+        return appointmentRepository.findAppointmentHistory(userId1, userId2);
+    }
+
+    @Transactional
+    public Appointment confirmAppointmentPayment(UUID appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
+
+        // Only update if it's pending, to avoid race conditions or invalid states
+        if (appointment.getStatus() == Appointment.Status.PENDING_PAYMENT) {
+            appointment.setStatus(Appointment.Status.SCHEDULED);
+            return appointmentRepository.save(appointment);
+        }
+        return appointment;
+    }
 }

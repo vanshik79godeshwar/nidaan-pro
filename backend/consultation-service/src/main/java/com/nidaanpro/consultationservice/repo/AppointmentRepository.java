@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,4 +29,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
 
 
     List<Appointment> findByDoctorIdOrderByAppointmentTimeDesc(UUID doctorId);
+
+    Optional<Appointment> findById(UUID appointmentId);
+
+    @Query("SELECT a FROM Appointment a WHERE (a.patientId = :patientId AND a.doctorId = :doctorId) OR (a.patientId = :doctorId AND a.doctorId = :patientId) ORDER BY a.appointmentTime DESC")
+    List<Appointment> findAppointmentHistory(@Param("patientId") UUID patientId, @Param("doctorId") UUID doctorId);
 }

@@ -6,18 +6,24 @@ import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { AppointmentDetailDto, DoctorAppointmentDetailDto } from '@/types';
 import Link from 'next/link';
+import ReviewModal from '@/components/ReviewModal';
+import Button from '@/components/ui/Button'; // Import the Button component
 
-// A single, unified type for display purposes to keep things clean
-type DisplayAppointment = {
-  id: string;
-  status: string;
-  appointmentTime: string;
-  partnerName: string; // This will be the doctor's name for a patient, or the patient's name for a doctor
+// Define the full appointment type for our card props
+type AppointmentCardProps = {
+  appointmentData: AppointmentDetailDto | DoctorAppointmentDetailDto;
+  onOpenReviewModal: (appointment: AppointmentDetailDto) => void;
 };
 
-// A universal card component that works for both roles
-function AppointmentCard({ appt }: { appt: DisplayAppointment }) {
+// A universal card component that now accepts the full appointment object
+function AppointmentCard({ appointmentData, onOpenReviewModal }: AppointmentCardProps) {
   const { user } = useAuth();
+  const { appointment } = appointmentData;
+
+  // Determine the partner's name based on the role and the type of DTO
+  const partnerName = user?.role === 'PATIENT'
+    ? (appointmentData as AppointmentDetailDto).doctorDetails.fullName
+    : (appointmentData as DoctorAppointmentDetailDto).patientDetails.fullName;
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -34,56 +40,73 @@ function AppointmentCard({ appt }: { appt: DisplayAppointment }) {
       <div className="flex justify-between items-start">
         <div>
           <h3 className="text-xl font-bold text-gray-800">
-            {user?.role === 'PATIENT' ? 'Dr. ' : 'Patient: '}{appt.partnerName}
+            {user?.role === 'PATIENT' ? 'Dr. ' : 'Patient: '}{partnerName}
           </h3>
           <p className="text-gray-600">
-            {new Date(appt.appointmentTime).toLocaleString(undefined, {
+            {new Date(appointment.appointmentTime).toLocaleString(undefined, {
               dateStyle: 'long', timeStyle: 'short'
             })}
           </p>
         </div>
-        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(appt.status)}`}>
-          {appt.status.replace(/_/g, ' ')}
+        <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(appointment.status)}`}>
+          {appointment.status.replace(/_/g, ' ')}
         </span>
       </div>
       <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-2">
-        {/* Informational Text on the left */}
         <div>
-            {appt.status === 'READY' && user?.role === 'PATIENT' && (
+            {appointment.status === 'READY' && user?.role === 'PATIENT' && (
                 <p className="text-sm text-green-600">Your report has been submitted.</p>
             )}
-            {appt.status === 'SCHEDULED' && user?.role === 'DOCTOR' && (
+            {appointment.status === 'SCHEDULED' && user?.role === 'DOCTOR' && (
                 <p className="text-sm text-yellow-600">Awaiting report from patient.</p>
             )}
         </div>
         
-        {/* Action Buttons on the right */}
         <div className="flex items-center space-x-2">
-            {/* THIS IS YOUR WORKING "START REPORT" BUTTON - UNCHANGED */}
-            {user?.role === 'PATIENT' && appt.status === 'SCHEDULED' && (
-              <Link href={`/dashboard/report/${appt.id}`}>
+            {user?.role === 'PATIENT' && appointment.status === 'SCHEDULED' && (
+              <Link href={`/dashboard/report/${appointment.id}`}>
                 <button className="px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
                   Start Report
                 </button>
               </Link>
             )}
             
-            {/* THIS IS THE WORKING "VIEW REPORT" BUTTON - UNCHANGED */}
-            {user?.role === 'DOCTOR' && appt.status === 'READY' && (
-              <Link href={`/dashboard/appointments/${appt.id}`}>
+            {user?.role === 'DOCTOR' && appointment.status === 'READY' && (
+              <Link href={`/dashboard/appointments/${appointment.id}`}>
                 <button className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md hover:bg-green-700">
                   View Report
                 </button>
               </Link>
             )}
 
-            {/* --- THIS IS THE NEW "JOIN CALL" BUTTON --- */}
-            {/* It appears for the Patient as soon as the appointment is scheduled */}
-            {/* It appears for the Doctor ONLY when the report is ready */}
-            {( (user?.role === 'PATIENT' && appt.status === 'SCHEDULED') || appt.status === 'READY' ) && (
-                <Link href={`/dashboard/call/${appt.id}`}>
+            {( (user?.role === 'PATIENT' && appointment.status === 'SCHEDULED') || appointment.status === 'READY' ) && (
+                <Link href={`/call/${appointment.id}`}>
                     <button className="px-4 py-2 font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700">
                       Join Call
+                    </button>
+                </Link>
+            )}
+
+            {/* --- INTEGRATED "LEAVE A REVIEW" BUTTON --- */}
+            {user?.role === 'PATIENT' && appointment.status === 'COMPLETED' && (
+                <Button onClick={() => onOpenReviewModal(appointmentData as AppointmentDetailDto)} className="w-auto bg-green-600 hover:bg-green-700">
+                    Leave a Review
+                </Button>
+            )}
+
+            {user?.role === 'DOCTOR' && appointment.status === 'COMPLETED' && !appointment.diagnosis && (
+                <Link href={`/dashboard/notes/${appointment.id}`}>
+                    <button className="px-4 py-2 font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">
+                        Add Notes
+                    </button>
+                </Link>
+            )}
+
+            {/* --- OPTIONAL: Add a button to view existing notes --- */}
+            {appointment.status === 'COMPLETED' && appointment.diagnosis && (
+                <Link href={`/dashboard/summary/${appointment.id}`}>
+                    <button className="px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+                        View Summary
                     </button>
                 </Link>
             )}
@@ -93,64 +116,45 @@ function AppointmentCard({ appt }: { appt: DisplayAppointment }) {
   );
 }
 
-
-// The main page component that handles all the logic (UNCHANGED)
+// The main page component
 function MyAppointmentsPage() {
-  const [appointments, setAppointments] = useState<DisplayAppointment[]>([]);
+  const [appointments, setAppointments] = useState<(AppointmentDetailDto | DoctorAppointmentDetailDto)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user, token } = useAuth();
+  const [isReviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentDetailDto | null>(null);
+
+  const fetchAppointments = async () => {
+    if (!user || !token) return;
+    setLoading(true);
+    try {
+      const url = user.role === 'PATIENT'
+        ? `/consultations/patient/${user.id}`
+        : `/consultations/doctor/${user.id}`;
+      
+      const response = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
+      const validAppointments = response.data.filter((item: any) => 
+        user.role === 'PATIENT' ? item?.appointment && item?.doctorDetails : item?.appointment && item?.patientDetails
+      );
+      setAppointments(validAppointments);
+
+    } catch (err) {
+      setError('Failed to fetch appointments. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAppointments = async () => {
-      if (!user || !token) return;
-
-      try {
-        setLoading(true);
-        const url = user.role === 'PATIENT'
-          ? `/consultations/patient/${user.id}`
-          : `/consultations/doctor/${user.id}`;
-        
-        const response = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
-
-        const normalizedData: DisplayAppointment[] = response.data
-          .filter((item: any) => {
-              if (user.role === 'PATIENT') return item && item.doctorDetails;
-              if (user.role === 'DOCTOR') return item && item.patientDetails;
-              return false;
-          })
-          .map((item: any) => {
-            if (user.role === 'PATIENT') {
-              const patientAppt = item as AppointmentDetailDto;
-              return {
-                id: patientAppt.appointment.id,
-                status: patientAppt.appointment.status,
-                appointmentTime: patientAppt.appointment.appointmentTime,
-                partnerName: patientAppt.doctorDetails.fullName,
-              };
-            } else { // DOCTOR
-              const doctorAppt = item as DoctorAppointmentDetailDto;
-              return {
-                id: doctorAppt.appointment.id,
-                status: doctorAppt.appointment.status,
-                appointmentTime: doctorAppt.appointment.appointmentTime,
-                partnerName: doctorAppt.patientDetails.fullName,
-              };
-            }
-          });
-        setAppointments(normalizedData);
-
-      } catch (err) {
-        setError('Failed to fetch appointments. Please try again.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAppointments();
   }, [user, token]);
 
+  const handleOpenReviewModal = (appointment: AppointmentDetailDto) => {
+    setSelectedAppointment(appointment);
+    setReviewModalOpen(true);
+  };
+  
   if (loading) return <p>Loading appointments...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -159,13 +163,28 @@ function MyAppointmentsPage() {
       <h1 className="text-3xl font-bold text-gray-800 mb-6">My Appointments</h1>
       <div className="space-y-6">
         {appointments.length > 0 ? (
-          appointments.map((appt) => <AppointmentCard key={appt.id} appt={appt} />)
+          appointments.map((appt) => 
+            <AppointmentCard 
+              key={appt.appointment.id} 
+              appointmentData={appt} 
+              onOpenReviewModal={handleOpenReviewModal} 
+            />
+          )
         ) : (
           <div className="text-center py-10 px-6 bg-gray-50 rounded-lg">
             <p className="text-gray-600">You have no appointments scheduled at the moment.</p>
           </div>
         )}
       </div>
+
+      {selectedAppointment && (
+        <ReviewModal
+            isOpen={isReviewModalOpen}
+            onClose={() => setReviewModalOpen(false)}
+            appointment={selectedAppointment}
+            onReviewSubmitted={fetchAppointments}
+        />
+      )}
     </div>
   );
 }

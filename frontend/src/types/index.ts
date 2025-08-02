@@ -13,6 +13,7 @@ export interface DoctorDetailDto {
     yearsOfExperience: number;
     consultationFee: number;
     averageRating: number;
+    ratingCount: number;
     profilePictureUrl?: string; // Optional profile picture
   };
 }
@@ -36,13 +37,18 @@ export interface Appointment {
   consultationType: 'SCHEDULED' | 'EMERGENCY';
   consultationUrl: string | null;
   createdAt: string;
+
+  diagnosis: string | null;
+  doctorNotes: string | null;
+  prescription: string | null;
 }
 
-// This matches the final object returned by the new backend endpoint
 export interface AppointmentDetailDto {
   appointment: Appointment;
   doctorDetails: {
-    userId: string;
+    // --- THIS IS THE FIX ---
+    // Change this from userId to id to match the backend DTO
+    id: string; 
     fullName: string;
     email: string;
   };
@@ -64,4 +70,24 @@ export interface PaymentDto {
   amount: number;
   status: string;
   dummyTransactionId: string; // This holds the Razorpay Order ID
+}
+
+export interface DoctorReview {
+  id: string;
+  appointmentId: string;
+  patientId: string;
+  doctorId: string;
+  rating: number;
+  comment: string;
+  reviewDate: string; // ISO 8601 string
+}
+
+// This matches the DoctorReviewDto which includes patient details
+export interface DoctorReviewDto {
+  review: DoctorReview;
+  patientDetails: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
 }

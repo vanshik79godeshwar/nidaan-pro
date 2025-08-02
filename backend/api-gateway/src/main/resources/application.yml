@@ -22,7 +22,7 @@ spring:
         - id: user-profile-service
           uri: lb://USER-PROFILE-SERVICE
           predicates:
-            - Path=/api/profiles/**, /api/specialities/**, /api/doctors/**
+            - Path=/api/profiles/**, /api/specialities/**, /api/doctors/**,  /api/reviews/**
 
         - id: consultation-service
           uri: lb://CONSULTATION-SERVICE

@@ -6,7 +6,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
-import { Toaster } from 'sonner'; // <-- Import the Toaster component
+import { Toaster } from 'sonner';
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,21 +17,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  // --- THIS IS THE FIX ---
+  // We check if the path is for the dashboard or the call page
   const isDashboard = pathname.startsWith('/dashboard');
+  const isCall = pathname.startsWith('/call'); // New check for the call page
 
   return (
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen`}>
-        {/* --- ADD THIS COMPONENT --- */}
-        {/* It can be placed anywhere, but here is a good spot. */}
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+        />
+        
         <Toaster position="top-right" richColors />
         
         <AuthProvider>
-          {!isDashboard && <Header />}
-          <main className={`flex-grow ${!isDashboard ? 'container mx-auto px-6 py-8' : ''}`}>
+          {/* Only show Header/Footer if it's NOT a dashboard or call page */}
+          {!isDashboard && !isCall && <Header />}
+          <main className={`flex-grow ${!isDashboard && !isCall ? 'container mx-auto px-6 py-8' : ''}`}>
             {children}
           </main>
-          {!isDashboard && <Footer />}
+          {!isDashboard && !isCall && <Footer />}
         </AuthProvider>
       </body>
     </html>

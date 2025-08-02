@@ -48,4 +48,13 @@ public class Appointment {
         SCHEDULED,
         EMERGENCY
     }
+
+    @Column(columnDefinition = "TEXT")
+    private String diagnosis;
+
+    @Column(columnDefinition = "TEXT")
+    private String doctorNotes;
+
+    @Column(columnDefinition = "TEXT")
+    private String prescription;
 }

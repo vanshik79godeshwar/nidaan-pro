@@ -9,6 +9,7 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.UUID;
 
@@ -17,10 +18,12 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final RazorpayClient razorpayClient;
+    private final WebClient.Builder webClientBuilder;
 
-    public PaymentService(PaymentRepository paymentRepository, RazorpayClient razorpayClient) {
+    public PaymentService(PaymentRepository paymentRepository, RazorpayClient razorpayClient, WebClient.Builder webClientBuilder) {
         this.paymentRepository = paymentRepository;
         this.razorpayClient = razorpayClient;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public Payment createPaymentOrder(CreatePaymentRequestDto dto) throws RazorpayException {
@@ -52,6 +55,16 @@ public class PaymentService {
         Payment.PaymentStatus newStatus = Payment.PaymentStatus.valueOf(dto.status().toUpperCase());
         payment.setStatus(newStatus);
 
-        return paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        if (savedPayment.getStatus() == Payment.PaymentStatus.SUCCESS) {
+            webClientBuilder.build().post()
+                    .uri("http://CONSULTATION-SERVICE/api/consultations/{appointmentId}/confirm-payment", payment.getAppointmentId())
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .block(); // .block() makes the call synchronous
+        }
+
+        return savedPayment;
     }
 }

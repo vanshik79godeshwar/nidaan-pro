@@ -12,7 +12,9 @@
     "@100mslive/react-sdk": "^0.10.35",
     "@stomp/stompjs": "^7.1.1",
     "axios": "^1.10.0",
+    "html2canvas": "^1.4.1",
     "http-proxy": "^1.18.1",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.534.0",
     "next": "15.4.2",
     "react": "^18.3.1",
@@ -23,12 +25,14 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/jspdf": "^1.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sockjs-client": "^1.5.4",
     "eslint": "^9",
     "eslint-config-next": "15.4.2",
+    "postcss-preset-env": "^10.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

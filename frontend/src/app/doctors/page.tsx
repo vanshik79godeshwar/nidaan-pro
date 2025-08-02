@@ -1,90 +1,100 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import Link from 'next/link';
+import DoctorCard from '@/components/DoctorCard';
+import DoctorSearchFilters from '@/components/DoctorSearchFilters'; // Import the new filters component
+import { DoctorDetailDto } from '@/types';
 
-// Define an interface for the shape of our doctor data
-interface DoctorProfile {
-  fullName: string;
-  email: string;
-  doctorProfile: {
-    userId: string;
-    specialityId: number;
-    medicalLicenseNumber: string;
-    bio: string;
-    yearsOfExperience: number;
-    consultationFee: number;
-  };
+interface Speciality {
+  id: number;
+  name: string;
 }
 
-function DoctorCard({ doctor }: { doctor: DoctorProfile }) {
-  return (
-    <Link href={`/doctors/${doctor.doctorProfile.userId}`}>
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-xl hover:border-blue-500 transition-all duration-200 cursor-pointer">
-        <h3 className="text-2xl font-bold text-gray-800">{doctor.fullName}</h3>
-        <p className="text-blue-500 mb-2">{doctor.email}</p>
-        <p className="text-gray-600 truncate">{doctor.doctorProfile.bio}</p>
-        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-          <span className="text-lg font-semibold text-gray-700">
-            ₹{doctor.doctorProfile.consultationFee}
-          </span>
-          <span className="text-sm text-white bg-blue-500 px-3 py-1 rounded-full">
-            View Profile
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// The main page component
 function DoctorsPage() {
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+  const [allDoctors, setAllDoctors] = useState<DoctorDetailDto[]>([]);
+  const [specialities, setSpecialities] = useState<Speciality[]>([]);
+  const [selectedSpeciality, setSelectedSpeciality] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { token } = useAuth();
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      if (!token) return; // Don't fetch if there's no token
-
+    const fetchData = async () => {
+      if (!token) return;
+      setLoading(true);
+      setError('');
       try {
-        const response = await api.get('/doctors', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setDoctors(response.data);
+        const [doctorsRes, specialitiesRes] = await Promise.all([
+          api.get('/doctors', { headers: { Authorization: `Bearer ${token}` } }),
+          api.get('/specialities', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        setAllDoctors(doctorsRes.data);
+        setSpecialities(specialitiesRes.data);
       } catch (err) {
-        setError('Failed to fetch doctors. Please try again later.');
+        setError('Failed to fetch data. Please try again later.');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDoctors();
+    fetchData();
   }, [token]);
 
-  if (loading) return <p>Loading doctors...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  // Client-side filtering logic
+  const filteredDoctors = useMemo(() => {
+    return allDoctors
+      .filter(doctor => 
+        selectedSpeciality ? doctor.doctorProfile.specialityId === parseInt(selectedSpeciality, 10) : true
+      )
+      .filter(doctor => 
+        doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  }, [allDoctors, selectedSpeciality, searchQuery]);
+
+  if (error) return <p className="text-red-500 text-center mt-10">{error}</p>;
 
   return (
     <div>
       <h1 className="text-4xl font-bold text-gray-800 mb-8">Find a Doctor</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {doctors.map((doctor) => (
-          <DoctorCard key={doctor.doctorProfile.userId} doctor={doctor} />
-        ))}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Left Column: Filters */}
+        <div className="lg:col-span-1">
+          <DoctorSearchFilters
+            specialities={specialities}
+            selectedSpeciality={selectedSpeciality}
+            setSelectedSpeciality={setSelectedSpeciality}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        </div>
+
+        {/* Right Column: Doctor Listings */}
+        <div className="lg:col-span-3">
+          {loading ? (
+             <p>Loading doctors...</p>
+          ) : filteredDoctors.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredDoctors.map((doctor) => {
+                const specialityName = specialities.find(s => s.id === doctor.doctorProfile.specialityId)?.name;
+                return <DoctorCard key={doctor.doctorProfile.userId} doctor={doctor} specialityName={specialityName} />;
+              })}
+            </div>
+          ) : (
+            <div className="text-center bg-white p-12 rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold text-gray-700">No Doctors Found</h3>
+                <p className="text-gray-500 mt-2">Try adjusting your search or filter criteria.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-// Wrap the main page component with the ProtectedRoute
 export default function ProtectedDoctorsPage() {
   return (
     <ProtectedRoute>

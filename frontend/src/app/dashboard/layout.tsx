@@ -11,8 +11,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // --- ADD THIS STATE ---
-  // This state will control the collapsed/expanded view on desktop.
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -22,14 +20,14 @@ export default function DashboardLayout({
           isMobileOpen={sidebarOpen} 
           setMobileOpen={setSidebarOpen}
           isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed} // Pass the new state and setter down
+          setIsCollapsed={setIsCollapsed}
         />
 
-        {/* --- UPDATE THIS DIV --- */}
-        {/* The main content area will now adjust its left margin based on the sidebar's state */}
-        <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+        {/* This div now correctly fills the remaining space without extra margin */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-            <div className="container mx-auto px-6 py-8 relative">
+            {/* By removing 'container' and 'mx-auto', this div will fill its parent */}
+            <div className="px-6 py-8 relative h-full">
               
               <button
                 onClick={() => setSidebarOpen(true)}

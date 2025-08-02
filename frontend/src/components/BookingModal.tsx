@@ -1,4 +1,3 @@
-// frontend/src/components/BookingModal.tsx
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,14 @@ import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { DoctorDetailDto, PaymentDto } from '@/types';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+// --- DEFINE A TYPE FOR THE RAZORPAY WINDOW OBJECT ---
+interface RazorpayWindow extends Window {
+    Razorpay: any; 
+}
+declare const window: RazorpayWindow;
+
 
 interface Slot {
   id: string;
@@ -24,51 +31,72 @@ interface BookingModalProps {
 export default function BookingModal({ isOpen, onClose, doctor, slot }: BookingModalProps) {
   const { user, token } = useAuth();
   const router = useRouter();
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDummyPaymentBooking = async () => {
+  const handlePayment = async () => {
     if (!slot || !user) {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       return;
     }
     setIsLoading(true);
-    setError('');
 
     try {
-      // Step 1: Book the appointment to create the initial payment record
-      const bookingPayload = {
-        patientId: user.id,
-        doctorId: doctor.doctorProfile.userId,
-        slotId: slot.id,
-        appointmentTime: slot.slotTime,
-      };
-
+      // Step 1: Call your backend to book the appointment and create a Razorpay order
       const { data: paymentDetails }: { data: PaymentDto } = await api.post(
         '/consultations/book',
-        bookingPayload,
+        {
+          patientId: user.id,
+          doctorId: doctor.doctorProfile.userId,
+          slotId: slot.id,
+          appointmentTime: slot.slotTime,
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Step 2: Simulate a successful payment by calling our own webhook
-      const webhookPayload = {
-        paymentId: paymentDetails.id,
-        status: "SUCCESS",
+      // Step 2: Configure Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Your Test Key ID from Razorpay Dashboard
+        amount: paymentDetails.amount * 100, // Amount in paise
+        currency: "INR",
+        name: "Nidaan Pro",
+        description: `Consultation with Dr. ${doctor.fullName}`,
+        order_id: paymentDetails.dummyTransactionId, // This is the Razorpay Order ID from your backend
+        handler: async function (response: any) {
+            // Step 3: This function runs after a SUCCESSFUL payment in the Razorpay popup
+            toast.success("Payment successful! Confirming your appointment...");
+            
+            // Step 4: Call your own webhook to finalize the booking in your system
+            await api.post('/payments/webhook', {
+                paymentId: paymentDetails.id,
+                status: "SUCCESS",
+            }, { headers: { Authorization: `Bearer ${token}` } });
+
+            router.push('/dashboard/appointments');
+            onClose();
+        },
+        prefill: {
+            name: user.fullName,
+            email: user.email,
+        },
+        theme: {
+            color: "#3399cc"
+        },
+        modal: {
+            ondismiss: function() {
+                // This function runs if the user closes the Razorpay popup
+                setIsLoading(false);
+                toast.error("Payment was cancelled.");
+            }
+        }
       };
 
-      await api.post('/payments/webhook', webhookPayload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Step 3: Show success and redirect
-      alert("Payment Successful! Your appointment is confirmed.");
-      router.push('/dashboard/appointments');
-      onClose();
+      // Step 5: Open the Razorpay popup
+      const rzp = new window.Razorpay(options);
+      rzp.open();
 
     } catch (err) {
-      setError('Failed to book. This slot may have just been taken.');
       console.error(err);
-    } finally {
+      toast.error('Booking failed. This slot may have just been taken.');
       setIsLoading(false);
     }
   };
@@ -76,20 +104,11 @@ export default function BookingModal({ isOpen, onClose, doctor, slot }: BookingM
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Confirm Appointment`}>
       <div className="space-y-4">
-        <p>You are booking an appointment with <strong>{doctor.fullName}</strong>.</p>
-        <div>
-            <p className="font-semibold">Date:</p>
-            <p>{new Date(slot.slotTime).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-        <div>
-            <p className="font-semibold">Time:</p>
-            <p>{new Date(slot.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
-        </div>
+        {/* ... (modal content remains the same) ... */}
       </div>
       <div className="mt-6 border-t pt-4">
-        {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-        <Button onClick={handleDummyPaymentBooking} disabled={isLoading}>
-          {isLoading ? 'Booking...' : `Confirm Booking (Dummy Payment)`}
+        <Button onClick={handlePayment} disabled={isLoading}>
+          {isLoading ? 'Processing...' : `Proceed to Pay ₹${doctor.doctorProfile.consultationFee}`}
         </Button>
       </div>
     </Modal>

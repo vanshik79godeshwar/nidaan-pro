@@ -1,6 +1,7 @@
 package com.nidaanpro.consultationservice.controller;
 
 import com.nidaanpro.consultationservice.dto.*;
+import com.nidaanpro.consultationservice.model.Appointment;
 import com.nidaanpro.consultationservice.model.PreConsultationReport;
 import com.nidaanpro.consultationservice.service.ConsultationService;
 import com.nidaanpro.consultationservice.service.GeminiService;
@@ -73,5 +74,60 @@ public class ConsultationController {
         return ResponseEntity.ok(appointments);
     }
 
+    @GetMapping("/{appointmentId}/status")
+    public ResponseEntity<AppointmentStatusDto> getAppointmentStatus(@PathVariable UUID appointmentId) {
+        return consultationService.getAppointmentStatus(appointmentId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
+    @PostMapping("/{appointmentId}/complete")
+    public ResponseEntity<Void> completeAppointment(@PathVariable UUID appointmentId) {
+        try {
+            consultationService.completeAppointment(appointmentId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{appointmentId}/notes")
+    public ResponseEntity<Appointment> addDoctorNotes(
+            @PathVariable UUID appointmentId,
+            @Valid @RequestBody SubmitNotesDto dto
+    ) {
+        try {
+            Appointment updatedAppointment = consultationService.addDoctorNotes(appointmentId, dto);
+            return ResponseEntity.ok(updatedAppointment);
+        } catch (RuntimeException e) {
+            // Return a more specific error for the frontend to handle
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @GetMapping("/{appointmentId}")
+    public ResponseEntity<AppointmentDetailDto> getAppointmentDetails(@PathVariable UUID appointmentId) {
+        return consultationService.getAppointmentDetails(appointmentId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/history/{userId1}/{userId2}")
+    public ResponseEntity<List<Appointment>> getAppointmentHistory(
+            @PathVariable UUID userId1,
+            @PathVariable UUID userId2
+    ) {
+        List<Appointment> history = consultationService.getAppointmentHistory(userId1, userId2);
+        return ResponseEntity.ok(history);
+    }
+
+    @PostMapping("/{appointmentId}/confirm-payment")
+    public ResponseEntity<Appointment> confirmPayment(@PathVariable UUID appointmentId) {
+        try {
+            Appointment updatedAppointment = consultationService.confirmAppointmentPayment(appointmentId);
+            return ResponseEntity.ok(updatedAppointment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
