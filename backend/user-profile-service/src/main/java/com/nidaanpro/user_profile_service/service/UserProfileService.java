@@ -43,7 +43,19 @@ public class UserProfileService {
         doctor.setYearsOfExperience(dto.yearsOfExperience());
         doctor.setConsultationFee(dto.consultationFee());
         doctor.setProfilePictureUrl(dto.profilePictureUrl());
+        if (dto.availableForEmergency() != null) {
+            doctor.setAvailableForEmergency(dto.availableForEmergency());
+        }
         return doctorRepository.save(doctor);
+    }
+
+    public List<UserDetailDto> findEmergencyAvailableDoctors(Integer specialityId) {
+        List<Doctor> doctors = doctorRepository.findBySpecialityIdAndAvailableForEmergencyTrue(specialityId);
+        if (doctors.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> userIds = doctors.stream().map(Doctor::getUserId).toList();
+        return findUserDetailsByIds(userIds); // We can reuse the existing method to get their details
     }
 
     public Patient createPatientProfile(CreatePatientProfileDto dto) {

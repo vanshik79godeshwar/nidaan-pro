@@ -2,6 +2,7 @@ package com.nidaanpro.user_profile_service.controller;
 
 import com.nidaanpro.user_profile_service.dto.DoctorDetailDto;
 import com.nidaanpro.user_profile_service.dto.DoctorSlotDto;
+import com.nidaanpro.user_profile_service.dto.UserDetailDto;
 import com.nidaanpro.user_profile_service.model.DoctorSlot;
 import com.nidaanpro.user_profile_service.service.UserProfileService;
 import org.springframework.http.HttpStatus;
@@ -44,5 +45,10 @@ public class DoctorController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+    }
+
+    @GetMapping("/emergency-available")
+    public ResponseEntity<List<UserDetailDto>> getEmergencyAvailableDoctors(@RequestParam Integer specialityId) {
+        return ResponseEntity.ok(userProfileService.findEmergencyAvailableDoctors(specialityId));
     }
 }

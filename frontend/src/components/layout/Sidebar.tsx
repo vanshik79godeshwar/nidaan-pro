@@ -16,10 +16,13 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction } from 'react';
+import NotificationBell from './NotificationBell';
+import { Siren } from 'lucide-react';
 
 // Link definitions remain the same
 const patientLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dashboard/emergency', label: 'Emergency Connect', icon: Siren },
     { href: '/dashboard/appointments', label: 'My Appointments', icon: CalendarDays },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/profile', label: 'My Profile', icon: User },
@@ -27,6 +30,7 @@ const patientLinks = [
   
 const doctorLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/dashboard/emergency', label: 'Emergency Room', icon: Siren },
     { href: '/dashboard/appointments', label: 'Appointments', icon: CalendarDays },
     { href: '/dashboard/schedule', label: 'My Schedule', icon: ClipboardList },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
@@ -68,6 +72,9 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
         <div className={`flex items-center justify-between h-16 border-b px-4 ${isCollapsed ? 'md:justify-center' : 'lg:px-6'}`}>
             <span className={`font-bold text-xl text-blue-600 transition-opacity duration-200 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>Nidaan Pro</span>
             <span className={`font-bold text-xl text-blue-600 transition-opacity duration-200 ${isCollapsed ? 'opacity-100' : 'md:hidden'}`}>NP</span>
+            {/* <div className={`${isCollapsed ? 'hidden' : 'md:block'}`}>
+              <NotificationBell />
+            </div> */}
             <button onClick={() => setMobileOpen(false)} className="md:hidden text-gray-600"><X size={24} /></button>
         </div>
 
@@ -84,9 +91,12 @@ export default function Sidebar({ isMobileOpen, setMobileOpen, isCollapsed, setI
           })}
         </nav>
 
-        {/* --- Sidebar Toggle Button for Desktop --- */}
-        <div className="hidden md:block border-t p-2">
-          <button onClick={() => setIsCollapsed(!isCollapsed)} className="flex items-center justify-center w-full p-3 text-gray-500 rounded-lg hover:bg-gray-100">
+        <div className="p-2 border-t">
+          <div className={`flex items-center rounded-lg p-3 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+             {!isCollapsed && <span className="text-sm font-semibold text-gray-500">Notifications</span>}
+             <NotificationBell />
+          </div>
+          <button onClick={() => setIsCollapsed(!isCollapsed)} className="hidden md:flex items-center justify-center w-full p-3 text-gray-500 rounded-lg hover:bg-gray-100 mt-1">
             {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
         </div>

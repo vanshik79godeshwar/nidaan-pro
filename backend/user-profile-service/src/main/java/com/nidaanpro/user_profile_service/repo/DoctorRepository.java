@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface DoctorRepository extends JpaRepository<Doctor, UUID> {
     // <-- ADD THIS METHOD
     List<Doctor> findBySpecialityId(Integer specialityId);
+    List<Doctor> findBySpecialityIdAndAvailableForEmergencyTrue(Integer specialityId);
 }

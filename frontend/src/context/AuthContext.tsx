@@ -7,7 +7,17 @@ import { useRouter } from 'next/navigation';
 // Define the shape of the profile object, which can be either a patient or doctor profile
 interface UserProfile {
   profilePictureUrl?: string;
-  // Add other common profile fields if needed in the future
+  // Doctor-specific fields
+  specialityId?: number;
+  medicalLicenseNumber?: string;
+  bio?: string;
+  yearsOfExperience?: number;
+  consultationFee?: number;
+  availableForEmergency?: boolean;
+  // Patient-specific fields
+  dateOfBirth?: string | null;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | null;
+  address?: string | null;
 }
 
 // Update AuthUser to include the optional profile

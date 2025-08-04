@@ -21,9 +21,17 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
     }
 
-    @Bean public MessageConverter jsonMessageConverter() { return new Jackson2JsonMessageConverter(); }
-    @Bean public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
+    // --- THIS IS THE FIX ---
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        // This converter will now add "__TypeId__" headers to the messages
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        // We tell the template to use our new, smarter message converter
         rabbitTemplate.setMessageConverter(jsonMessageConverter());
         return rabbitTemplate;
     }

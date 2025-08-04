@@ -40,6 +40,10 @@ public class Doctor {
 
     private String headerPictureUrl;
 
+    @Column(nullable = false)
+    private boolean availableForEmergency = false;
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AvailabilityStatus availabilityStatus = AvailabilityStatus.OFFLINE;

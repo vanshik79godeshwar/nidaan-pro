@@ -13,5 +13,6 @@ public record CreateDoctorProfileDto(
         String bio,
         @NotNull @Min(0) Integer yearsOfExperience,
         @NotNull BigDecimal consultationFee,
-        String profilePictureUrl
+        String profilePictureUrl,
+        Boolean availableForEmergency
 ) {}

@@ -2,9 +2,14 @@ package com.nidaanpro.consultationservice.service;
 
 import com.nidaanpro.consultationservice.config.RabbitMQConfig;
 import com.nidaanpro.consultationservice.dto.*;
+import com.nidaanpro.consultationservice.dto.events.AppointmentConfirmationEvent;
+import com.nidaanpro.consultationservice.dto.events.EmergencyRequestAcceptedEvent;
+import com.nidaanpro.consultationservice.dto.events.EmergencyRequestEvent;
 import com.nidaanpro.consultationservice.model.Appointment;
+import com.nidaanpro.consultationservice.model.EmergencyRequest;
 import com.nidaanpro.consultationservice.model.PreConsultationReport;
 import com.nidaanpro.consultationservice.repo.AppointmentRepository;
+import com.nidaanpro.consultationservice.repo.EmergencyRequestRepository;
 import com.nidaanpro.consultationservice.repo.PreConsultationReportRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -12,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,12 +28,105 @@ public class ConsultationService {
     private final PreConsultationReportRepository reportRepository;
     private final WebClient.Builder webClientBuilder;
     private final RabbitTemplate rabbitTemplate;
+    private final EmergencyRequestRepository emergencyRequestRepository;
 
-    public ConsultationService(AppointmentRepository appointmentRepository, PreConsultationReportRepository reportRepository, WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate) {
+    public ConsultationService(AppointmentRepository appointmentRepository, PreConsultationReportRepository reportRepository, WebClient.Builder webClientBuilder, RabbitTemplate rabbitTemplate, EmergencyRequestRepository emergencyRequestRepository) {
         this.appointmentRepository = appointmentRepository;
         this.reportRepository = reportRepository;
         this.webClientBuilder = webClientBuilder;
         this.rabbitTemplate = rabbitTemplate;
+        this.emergencyRequestRepository = emergencyRequestRepository;
+    }
+
+    @Transactional
+    public Appointment acceptEmergencyRequest(UUID requestId, UUID doctorId) {
+        // 1. Find the request and ensure it's still pending
+        EmergencyRequest request = emergencyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Emergency request not found."));
+
+        if (request.getStatus() != EmergencyRequest.RequestStatus.PENDING) {
+            throw new IllegalStateException("This request has already been accepted.");
+        }
+
+        // 2. Update the request status
+        request.setStatus(EmergencyRequest.RequestStatus.ACCEPTED);
+        request.setAssignedDoctorId(doctorId);
+        emergencyRequestRepository.save(request);
+
+        // 3. Create a formal appointment record for this emergency consultation
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(request.getPatientId());
+        appointment.setDoctorId(doctorId);
+        appointment.setAppointmentTime(Instant.now()); // The appointment is happening now
+        appointment.setStatus(Appointment.Status.READY); // It's ready for the call immediately
+        appointment.setConsultationType(Appointment.ConsultationType.EMERGENCY);
+
+        List<UserDetailDto> allNotifiedDoctors = webClientBuilder.build().get()
+                .uri("http://USER-PROFILE-SERVICE/api/doctors/emergency-available?specialityId={specId}", request.getSpecialityId())
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .collectList()
+                .block();
+
+        // 2. Create and publish the "accepted" event
+        if (allNotifiedDoctors != null && !allNotifiedDoctors.isEmpty()) {
+            EmergencyRequestAcceptedEvent acceptedEvent = new EmergencyRequestAcceptedEvent(
+                    requestId,
+                    allNotifiedDoctors.stream().map(UserDetailDto::id).toList()
+            );
+            // We'll define this new exchange in the notification-service
+            rabbitTemplate.convertAndSend("emergency-request-exchange", "emergency.request.accepted", acceptedEvent);
+        }
+
+        return appointmentRepository.save(appointment);
+    }
+
+    @Transactional
+    public EmergencyRequest createEmergencyRequest(RequestEmergencyDto dto) {
+        // 1. Get patient details for the notification message
+        UserDetailDto patientDetails = fetchUserDetails(dto.patientId());
+
+        // 2. Create and save the new emergency request record
+        EmergencyRequest request = new EmergencyRequest();
+        request.setPatientId(dto.patientId());
+        request.setSpecialityId(dto.specialityId());
+        request.setPatientName(patientDetails.fullName());
+        EmergencyRequest savedRequest = emergencyRequestRepository.save(request);
+
+        // 3. Find all doctors available for this emergency
+        List<UserDetailDto> availableDoctors = webClientBuilder.build().get()
+                .uri("http://USER-PROFILE-SERVICE/api/doctors/emergency-available?specialityId={specId}", dto.specialityId())
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .collectList()
+                .block();
+
+        // 4. Publish a notification event for each available doctor
+        if (availableDoctors != null && !availableDoctors.isEmpty()) {
+            EmergencyRequestEvent event = new EmergencyRequestEvent(
+                    savedRequest.getId(),
+                    patientDetails.fullName(),
+                    dto.specialityId(),
+                    availableDoctors.stream().map(UserDetailDto::id).toList() // Send a list of doctor IDs
+            );
+            // We'll need a new RabbitMQ exchange for this
+            rabbitTemplate.convertAndSend("emergency-request-exchange", "emergency.request.new", event);
+        }
+
+        return savedRequest;
+    }
+
+    public List<EmergencyRequest> getPendingEmergencyRequests(Integer specialityId) {
+        return emergencyRequestRepository.findBySpecialityIdAndStatus(specialityId, EmergencyRequest.RequestStatus.PENDING);
+    }
+
+    private UserDetailDto fetchUserDetails(UUID userId) {
+        return webClientBuilder.build().post()
+                .uri("http://AUTH-SERVICE/api/users/details")
+                .bodyValue(List.of(userId))
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .blockFirst();
     }
 
     @Transactional
@@ -65,8 +164,21 @@ public class ConsultationService {
                 .bodyToMono(PaymentDto.class)
                 .block();
 
+        UserDetailDto patientDetails = fetchUserDetails(dto.patientId());
+        UserDetailDto doctorDetails = fetchUserDetails(dto.doctorId());
+
+        AppointmentConfirmationEvent event = new AppointmentConfirmationEvent(
+                savedAppointment.getId(),
+                dto.patientId(),
+                dto.doctorId(),
+                patientDetails.fullName(),
+                patientDetails.email(),
+                doctorDetails.fullName(),
+                savedAppointment.getAppointmentTime()
+        );
+
         // Step 4: Send notification about the booking
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, savedAppointment.getId().toString());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, event);
 
         return paymentResponse;
     }
@@ -239,5 +351,28 @@ public class ConsultationService {
             return appointmentRepository.save(appointment);
         }
         return appointment;
+    }
+
+    public Optional<EmergencyRequest> findActiveRequestForPatient(UUID patientId) {
+        return emergencyRequestRepository.findByPatientIdAndStatus(patientId, EmergencyRequest.RequestStatus.PENDING);
+    }
+
+    @Transactional
+    public EmergencyRequest cancelEmergencyRequest(UUID requestId, UUID patientId) {
+        EmergencyRequest request = emergencyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found."));
+
+        // Security check: ensure the person cancelling is the one who made the request
+        if (!request.getPatientId().equals(patientId)) {
+            throw new SecurityException("You can only cancel your own requests.");
+        }
+
+        if (request.getStatus() == EmergencyRequest.RequestStatus.PENDING) {
+            request.setStatus(EmergencyRequest.RequestStatus.CANCELLED);
+            return emergencyRequestRepository.save(request);
+        } else {
+            // Can't cancel a request that's already been accepted or completed
+            throw new IllegalStateException("This request can no longer be cancelled.");
+        }
     }
 }

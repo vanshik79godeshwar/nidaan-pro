@@ -2,6 +2,7 @@ package com.nidaanpro.consultationservice.controller;
 
 import com.nidaanpro.consultationservice.dto.*;
 import com.nidaanpro.consultationservice.model.Appointment;
+import com.nidaanpro.consultationservice.model.EmergencyRequest;
 import com.nidaanpro.consultationservice.model.PreConsultationReport;
 import com.nidaanpro.consultationservice.service.ConsultationService;
 import com.nidaanpro.consultationservice.service.GeminiService;
@@ -128,6 +129,49 @@ public class ConsultationController {
             return ResponseEntity.ok(updatedAppointment);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/emergency/request")
+    public ResponseEntity<EmergencyRequest> requestEmergencyConsultation(@Valid @RequestBody RequestEmergencyDto dto) {
+        EmergencyRequest request = consultationService.createEmergencyRequest(dto);
+        return new ResponseEntity<>(request, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/emergency/pending")
+    public ResponseEntity<List<EmergencyRequest>> getPendingRequests(@RequestParam Integer specialityId) {
+        return ResponseEntity.ok(consultationService.getPendingEmergencyRequests(specialityId));
+    }
+
+    @PostMapping("/emergency/{requestId}/accept")
+    public ResponseEntity<Appointment> acceptEmergencyRequest(
+            @PathVariable UUID requestId,
+            @Valid @RequestBody AcceptEmergencyDto dto
+    ) {
+        try {
+            Appointment newAppointment = consultationService.acceptEmergencyRequest(requestId, dto.doctorId());
+            return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Another doctor already accepted it
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/emergency/request/patient/{patientId}")
+    public ResponseEntity<EmergencyRequest> getActiveRequestForPatient(@PathVariable UUID patientId) {
+        return consultationService.findActiveRequestForPatient(patientId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/emergency/request/{requestId}/cancel")
+    public ResponseEntity<EmergencyRequest> cancelEmergencyRequest(@PathVariable UUID requestId, @RequestHeader("X-User-Id") UUID patientId) {
+        try {
+            EmergencyRequest cancelledRequest = consultationService.cancelEmergencyRequest(requestId, patientId);
+            return ResponseEntity.ok(cancelledRequest);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

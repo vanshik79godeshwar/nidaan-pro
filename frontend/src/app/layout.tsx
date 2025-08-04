@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from '@/context/NotificationContext'; 
 import { usePathname } from "next/navigation";
 import { Toaster } from 'sonner';
 import Script from 'next/script';
@@ -33,14 +34,15 @@ export default function RootLayout({
         <Toaster position="top-right" richColors />
         
         <AuthProvider>
-          {/* Only show Header/Footer if it's NOT a dashboard or call page */}
+          <NotificationProvider>
           {!isDashboard && !isCall && <Header />}
           <main className={`flex-grow ${!isDashboard && !isCall ? 'container mx-auto px-6 py-8' : ''}`}>
             {children}
           </main>
           {!isDashboard && !isCall && <Footer />}
-        </AuthProvider>
-      </body>
-    </html>
-  );
+        </NotificationProvider>
+      </AuthProvider>
+    </body>
+  </html>
+);
 }
