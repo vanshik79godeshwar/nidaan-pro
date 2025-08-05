@@ -1,12 +1,15 @@
-// backend/consultation-service/src/main/java/com/nidaanpro/consultation_service/model/PreConsultationReport.java
 package com.nidaanpro.consultationservice.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -20,35 +23,38 @@ public class PreConsultationReport {
     @Column(nullable = false, unique = true)
     private UUID appointmentId;
 
-    // --- THIS IS THE FIX: Re-add the old field ---
-    @Column(nullable = false, columnDefinition = "TEXT")
     private String problemBrief;
 
-    // --- New Fields ---
     @Column(columnDefinition = "TEXT")
     private String chiefComplaint;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private String staticQuestions;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
-    private String dynamicQuestions;
 
     @Column(columnDefinition = "TEXT")
     private String detailedDescription;
 
-    @Column(columnDefinition = "TEXT")
-    private String currentMedications;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, String> staticQuestions;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private Map<String, String> dynamicQuestions;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private List<String> currentMedications;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<String> attachmentUrls;
 
-    @Column(columnDefinition = "TEXT")
-    private String generatedReportText;
-
+    // --- THIS IS THE FIX ---
+    // These annotations tell the database to automatically set the timestamp
+    // when a new row is created or an existing one is updated.
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private Instant updatedAt;
 }

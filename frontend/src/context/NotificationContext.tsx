@@ -7,23 +7,21 @@ import { useAuth } from './AuthContext';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-// Define the shape of a single notification
+// This interface must match your backend model exactly
 interface Notification {
   id: string;
   userId: string;
   message: string;
-  isRead: boolean;
+  read: boolean; // Using 'read' to match your working backend model
   createdAt: string;
   link?: string;
 }
 
-// Define the shape of the context
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   isConnected: boolean;
-  client: Client | null; // Expose the client instance
-  markAsRead: (id: string) => void;
+  client: Client | null;
   markAllAsRead: () => void;
 }
 
@@ -35,82 +33,86 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [client, setClient] = useState<Client | null>(null);
 
-  useEffect(() => {
-    if (!user || !token) {
-      return;
+  const fetchInitialNotifications = useCallback(async () => {
+    if (!user || !token) return;
+    try {
+      const response = await api.get(`/notifications/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch initial notifications", error);
     }
+  }, [user, token]);
 
-    // 1. Fetch initial notifications via REST API
-    const fetchInitialNotifications = async () => {
-      try {
-        const response = await api.get(`/notifications/${user.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setNotifications(response.data);
-      } catch (error) {
-        console.error("Failed to fetch initial notifications", error);
-      }
-    };
-    fetchInitialNotifications();
+  useEffect(() => {
+    if (user && token) {
+      fetchInitialNotifications();
+    }
+  }, [user, token, fetchInitialNotifications]);
 
-    // 2. Establish WebSocket connection
-    const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:9002/ws-notifications'), // Connect to the notification proxy
+  useEffect(() => {
+    if (!user || !token) return;
+
+    const stompClient = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:9002/ws-notifications'),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
     });
 
-    client.onConnect = () => {
+    stompClient.onConnect = () => {
       setIsConnected(true);
       console.log('%cSUCCESS: Notification STOMP Client Connected!', 'color: green; font-weight: bold;');
       
-      // Subscribe to the user-specific queue
-      client.subscribe(`/user/${user.id}/queue/notifications`, (message) => {
+      stompClient.subscribe(`/user/${user.id}/queue/notifications`, (message) => {
         const newNotification: Notification = JSON.parse(message.body);
-        
-        // Add new notification to the top of the list
         setNotifications((prev) => [newNotification, ...prev]);
         
-        // Show a real-time toast notification
         toast.info(newNotification.message, {
-            action: newNotification.link ? {
-                label: 'View',
-                onClick: () => {
-                    // Only navigate if the link is not undefined
-                    if (newNotification.link) {
-                        window.location.href = newNotification.link;
-                    }
-                },
-            } : undefined,
+            action: newNotification.link ? { label: 'View', onClick: () => { if (newNotification.link) window.location.href = newNotification.link; } } : undefined,
         });
       });
     };
 
-    client.onDisconnect = () => setIsConnected(false);
-    client.onStompError = (frame) => console.error('Notification STOMP Error:', frame.headers['message']);
+    stompClient.onDisconnect = () => setIsConnected(false);
+    stompClient.onStompError = (frame) => console.error('Notification STOMP Error:', frame.headers['message']);
     
-    client.activate();
+    stompClient.activate();
+    setClient(stompClient);
 
     return () => {
-      client.deactivate();
+      stompClient.deactivate();
     };
   }, [user, token]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // This correctly calculates the count based on the 'read' field
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAsRead = useCallback((id: string) => {
-    // In a full implementation, you would also call a backend endpoint to persist this change
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-  }, []);
+  const markAllAsRead = useCallback(async () => {
+    if (!user || !token || unreadCount === 0) return;
 
-  const markAllAsRead = useCallback(() => {
-    // In a full implementation, you would also call a backend endpoint to persist this change
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  }, []);
+    // --- THIS IS THE KEY TO THE REAL-TIME UPDATE ---
+    // This "optimistic update" immediately changes the state on the frontend.
+    // We are now correctly setting 'read: true'.
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
 
+    try {
+      await api.post(`/notifications/${user.id}/mark-as-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error("Failed to mark all notifications as read", error);
+      toast.error("Could not sync read status with the server.");
+      // If the API call fails, we revert the UI change by refetching the original data
+      fetchInitialNotifications(); 
+    }
+  }, [user, token, unreadCount, fetchInitialNotifications]);
+
+  // The context value now includes the corrected markAllAsRead function
+  const value = { notifications, unreadCount, isConnected, markAllAsRead, client };
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, isConnected, markAsRead, markAllAsRead, client }}>
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );

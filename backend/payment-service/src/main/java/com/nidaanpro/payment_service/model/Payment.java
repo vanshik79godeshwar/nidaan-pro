@@ -15,16 +15,24 @@ public class Payment {
     private UUID id;
 
     @Column(nullable = false)
-    private UUID appointmentId;
+    private UUID referenceId;
 
     @Column(nullable = false)
     private BigDecimal amount;
+
+    // --- THIS IS THE FIX ---
+    // This annotation explicitly tells JPA/Hibernate to map this field
+    // to a database column named "order_id".
+    @Column(name = "order_id", nullable = false)
+    private String orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus status = PaymentStatus.PENDING;
 
-    private String dummyTransactionId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentType type;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
@@ -33,5 +41,10 @@ public class Payment {
         PENDING,
         SUCCESS,
         FAILED
+    }
+
+    public enum PaymentType {
+        APPOINTMENT,
+        EMERGENCY
     }
 }

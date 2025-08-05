@@ -44,14 +44,18 @@ export interface Appointment {
 }
 
 export interface AppointmentDetailDto {
-  appointment: Appointment;
-  doctorDetails: {
-    // --- THIS IS THE FIX ---
-    // Change this from userId to id to match the backend DTO
-    id: string; 
-    fullName: string;
-    email: string;
-  };
+    // The core appointment details are in a nested object
+    appointment: Appointment;
+    patientDetails: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
+    doctorDetails: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
 }
 
 export interface DoctorAppointmentDetailDto {
@@ -70,6 +74,7 @@ export interface PaymentDto {
   amount: number;
   status: string;
   dummyTransactionId: string; // This holds the Razorpay Order ID
+  orderId: string;
 }
 
 export interface DoctorReview {
@@ -90,4 +95,18 @@ export interface DoctorReviewDto {
     fullName: string;
     email: string;
   };
+}
+
+export interface PreConsultationReport {
+    id: string;
+    appointmentId: string;
+    chiefComplaint: string;
+    // These fields are now correctly typed as objects and arrays
+    staticQuestions: Record<string, string>; // Represents a map or object
+    dynamicQuestions: Record<string, string>;
+    currentMedications: string[];
+    attachmentUrls: string[];
+    // Include other fields from your backend model if necessary
+    createdAt: string;
+    updatedAt: string;
 }

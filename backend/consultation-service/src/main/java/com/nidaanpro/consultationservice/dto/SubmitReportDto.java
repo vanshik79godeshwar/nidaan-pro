@@ -1,18 +1,27 @@
-// backend/consultation-service/src/main/java/com/nidaanpro/consultation_service/dto/SubmitReportDto.java
 package com.nidaanpro.consultationservice.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-// Using a record for concise, immutable data transfer
+// This 'record' is a modern Java class that defines the expected structure of the JSON.
 public record SubmitReportDto(
-        @NotNull UUID appointmentId,
-        @NotBlank String chiefComplaint,
-        String staticQuestions, // Will be a JSON string from the frontend
-        String dynamicQuestions, // Will be a JSON string from the frontend
+        @NotNull
+        UUID appointmentId,
+
+        String chiefComplaint,
+
+        // --- THIS IS THE FIX ---
+        // This now correctly tells Java to expect a JSON object (a "Map") for staticQuestions,
+        // which matches what the frontend is sending.
+        Map<String, String> staticQuestions,
+
+        Map<String, String> dynamicQuestions,
+
         String detailedDescription,
-        String currentMedications,
+
+        List<String> currentMedications,
+
         List<String> attachmentUrls
 ) {}

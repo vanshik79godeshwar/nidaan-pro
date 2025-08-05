@@ -1,10 +1,13 @@
-package com.nidaanpro.consultationservice.dto.events;
+// In: backend/consultation-service/src/main/java/com/nidaanpro/consultationservice/dto/events/AppointmentConfirmationEvent.java
+// AND
+// In: backend/notification-service/src/main/java/com/nidaanpro/notification_service/dto/events/AppointmentConfirmationEvent.java
+
+package com.nidaanpro.consultationservice.dto.events; // or com.nidaanpro.notification_service.dto.events
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
-// A dedicated, serializable object for our RabbitMQ event
 public record AppointmentConfirmationEvent(
         UUID appointmentId,
         UUID patientId,
@@ -12,5 +15,6 @@ public record AppointmentConfirmationEvent(
         String patientName,
         String patientEmail,
         String doctorName,
-        Instant appointmentTime
+        Instant appointmentTime,
+        String consultationType // <-- ADD THIS FIELD
 ) implements Serializable {}

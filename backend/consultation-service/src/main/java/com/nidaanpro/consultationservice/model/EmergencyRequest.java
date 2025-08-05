@@ -32,6 +32,7 @@ public class EmergencyRequest {
     private Instant createdAt = Instant.now();
 
     public enum RequestStatus {
+        PENDING_PAYMENT,
         PENDING, // Waiting for a doctor to accept
         ACCEPTED, // A doctor has accepted the request
         COMPLETED, // The consultation is finished

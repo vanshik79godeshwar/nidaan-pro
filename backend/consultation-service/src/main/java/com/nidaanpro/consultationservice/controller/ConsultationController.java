@@ -5,12 +5,10 @@ import com.nidaanpro.consultationservice.model.Appointment;
 import com.nidaanpro.consultationservice.model.EmergencyRequest;
 import com.nidaanpro.consultationservice.model.PreConsultationReport;
 import com.nidaanpro.consultationservice.service.ConsultationService;
-import com.nidaanpro.consultationservice.service.GeminiService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,24 +18,10 @@ import java.util.UUID;
 public class ConsultationController {
 
     private final ConsultationService consultationService;
-//    private final GeminiService geminiService;
-//    private final WebClient.Builder webClientBuilder;
 
-    public ConsultationController(ConsultationService consultationService, GeminiService geminiService, WebClient.Builder webClientBuilder) {
+    public ConsultationController(ConsultationService consultationService) {
         this.consultationService = consultationService;
-//        this.webClientBuilder = webClientBuilder;
-//        this.geminiService = geminiService;
     }
-
-//    @PostMapping("/reports/dynamic-questions")
-//    public Mono<String> getDynamicQuestions(@Valid @RequestBody DynamicQuestionsRequestDto dto) {
-//        // This service now calls the API Gateway, which will then call the external Gemini API
-//        return webClientBuilder.build().post()
-//                .uri("http://API-GATEWAY/api/ai/dynamic-questions")
-//                .bodyValue(dto)
-//                .retrieve()
-//                .bodyToMono(String.class);
-//    }
 
     @GetMapping("/reports/appointment/{appointmentId}")
     public ResponseEntity<PreConsultationReport> getReportForAppointment(@PathVariable UUID appointmentId) {
@@ -101,7 +85,6 @@ public class ConsultationController {
             Appointment updatedAppointment = consultationService.addDoctorNotes(appointmentId, dto);
             return ResponseEntity.ok(updatedAppointment);
         } catch (RuntimeException e) {
-            // Return a more specific error for the frontend to handle
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
@@ -132,10 +115,14 @@ public class ConsultationController {
         }
     }
 
-    @PostMapping("/emergency/request")
-    public ResponseEntity<EmergencyRequest> requestEmergencyConsultation(@Valid @RequestBody RequestEmergencyDto dto) {
-        EmergencyRequest request = consultationService.createEmergencyRequest(dto);
-        return new ResponseEntity<>(request, HttpStatus.CREATED);
+    // --- THIS IS THE FIX ---
+    // The old `/emergency/request` endpoint has been removed.
+    // The new `/emergency/initiate` endpoint is now the correct entry point.
+
+    @PostMapping("/emergency/initiate")
+    public ResponseEntity<PaymentDto> initiateEmergencyConsultation(@Valid @RequestBody RequestEmergencyDto dto) {
+        PaymentDto paymentDetails = consultationService.initiateEmergencyRequest(dto);
+        return new ResponseEntity<>(paymentDetails, HttpStatus.CREATED);
     }
 
     @GetMapping("/emergency/pending")
@@ -152,7 +139,7 @@ public class ConsultationController {
             Appointment newAppointment = consultationService.acceptEmergencyRequest(requestId, dto.doctorId());
             return new ResponseEntity<>(newAppointment, HttpStatus.CREATED);
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Another doctor already accepted it
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -173,5 +160,11 @@ public class ConsultationController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/emergency/{requestId}/confirm-payment")
+    public ResponseEntity<Void> confirmEmergencyPayment(@PathVariable UUID requestId) {
+        consultationService.confirmEmergencyPayment(requestId);
+        return ResponseEntity.ok().build();
     }
 }

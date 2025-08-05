@@ -1,3 +1,5 @@
+// backend/notification-service/src/main/java/com/nidaanpro/notification_service/config/RabbitMQConfig.java
+
 package com.nidaanpro.notification_service.config;
 
 import org.springframework.amqp.core.Binding;
@@ -15,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // --- All your existing constants and queue/exchange/binding beans are correct ---
+    // --- All your existing constants are here for reference ---
     public static final String QUEUE_NAME = "user-registration-queue";
     public static final String EXCHANGE_NAME = "user-registration-exchange";
     public static final String ROUTING_KEY = "user.registered";
@@ -26,10 +28,15 @@ public class RabbitMQConfig {
     public static final String APPOINTMENT_QUEUE_NAME = "appointment-booking-queue";
     public static final String APPOINTMENT_ROUTING_KEY = "appointment.booked";
     public static final String EMERGENCY_EXCHANGE_NAME = "emergency-request-exchange";
-    public static final String EMERGENCY_QUEUE_NAME = "emergency-request-notification-queue";
-    public static final String EMERGENCY_ROUTING_KEY = "emergency.request.new";
+
+    // --- THIS IS THE FIX ---
+    // 1. Define constants for each queue and routing key
+    public static final String EMERGENCY_NEW_QUEUE_NAME = "emergency-request-new-queue";
+    public static final String EMERGENCY_ACCEPTED_QUEUE_NAME = "emergency-request-accepted-queue";
+    public static final String EMERGENCY_ROUTING_KEY_NEW = "emergency.request.new";
     public static final String EMERGENCY_ROUTING_KEY_ACCEPTED = "emergency.request.accepted";
 
+    // ... (Your other bean definitions for registration, password reset, etc. remain the same)
     @Bean public Queue registrationQueue() { return new Queue(QUEUE_NAME); }
     @Bean public TopicExchange registrationExchange() { return new TopicExchange(EXCHANGE_NAME); }
     @Bean public Binding registrationBinding() { return BindingBuilder.bind(registrationQueue()).to(registrationExchange()).with(ROUTING_KEY); }
@@ -39,27 +46,34 @@ public class RabbitMQConfig {
     @Bean public Queue appointmentQueue() { return new Queue(APPOINTMENT_QUEUE_NAME); }
     @Bean public TopicExchange appointmentExchange() { return new TopicExchange(APPOINTMENT_EXCHANGE_NAME); }
     @Bean public Binding appointmentBinding() { return BindingBuilder.bind(appointmentQueue()).to(appointmentExchange()).with(APPOINTMENT_ROUTING_KEY); }
-    @Bean public Queue emergencyQueue() { return new Queue(EMERGENCY_QUEUE_NAME); }
+
+
+    // --- THIS IS THE FIX ---
+    // 2. Define a bean for the shared exchange
     @Bean public TopicExchange emergencyExchange() { return new TopicExchange(EMERGENCY_EXCHANGE_NAME); }
-    @Bean public Binding emergencyBinding() {
-        return BindingBuilder.bind(emergencyQueue()).to(emergencyExchange()).with(EMERGENCY_ROUTING_KEY);
+
+    // 3. Create a queue and binding for NEW emergency requests
+    @Bean public Queue emergencyNewQueue() { return new Queue(EMERGENCY_NEW_QUEUE_NAME); }
+    @Bean public Binding emergencyNewBinding() {
+        return BindingBuilder.bind(emergencyNewQueue()).to(emergencyExchange()).with(EMERGENCY_ROUTING_KEY_NEW);
     }
+
+    // 4. Create a SEPARATE queue and binding for ACCEPTED emergency requests
+    @Bean public Queue emergencyAcceptedQueue() { return new Queue(EMERGENCY_ACCEPTED_QUEUE_NAME); }
     @Bean public Binding emergencyAcceptedBinding() {
-        // We bind the same queue to a new routing key
-        return BindingBuilder.bind(emergencyQueue()).to(emergencyExchange()).with(EMERGENCY_ROUTING_KEY_ACCEPTED);
+        return BindingBuilder.bind(emergencyAcceptedQueue()).to(emergencyExchange()).with(EMERGENCY_ROUTING_KEY_ACCEPTED);
     }
+
+    // This part is correct and necessary for deserializing the event objects
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-    // 2. We create a factory for our RabbitMQ listeners.
     @Bean
     public SimpleRabbitListenerContainerFactory jsaFactory(ConnectionFactory connectionFactory, SimpleRabbitListenerContainerFactoryConfigurer configurer) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         configurer.configure(factory, connectionFactory);
-        // Crucially, we tell this factory to use our JSON converter.
-        // It will now read the "__TypeId__" header and deserialize the message into the correct Java object.
         factory.setMessageConverter(jsonMessageConverter());
         return factory;
     }

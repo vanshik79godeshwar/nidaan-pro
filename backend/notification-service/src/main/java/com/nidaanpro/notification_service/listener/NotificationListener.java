@@ -1,3 +1,4 @@
+// backend/notification-service/src/main/java/com/nidaanpro/notification_service/listener/NotificationListener.java
 package com.nidaanpro.notification_service.listener;
 
 import com.nidaanpro.notification_service.config.RabbitMQConfig;
@@ -21,6 +22,7 @@ public class NotificationListener {
         this.notificationService = notificationService;
     }
 
+    // ... (handleUserRegistration, handlePasswordReset, handleAppointmentBooking methods are unchanged)
     @RabbitListener(queues = RabbitMQConfig.QUEUE_NAME)
     public void handleUserRegistration(String message) {
         String[] parts = message.split(":");
@@ -58,26 +60,26 @@ public class NotificationListener {
         notificationService.createAndSendNotification(event.doctorId(), doctorMessage, doctorLink);
     }
 
-    @RabbitListener(queues = RabbitMQConfig.EMERGENCY_QUEUE_NAME)
+    // --- THIS IS THE FIX ---
+    // This listener now only listens to the queue for NEW requests
+    @RabbitListener(queues = RabbitMQConfig.EMERGENCY_NEW_QUEUE_NAME)
     public void handleEmergencyRequest(EmergencyRequestEvent event) {
         System.out.println("Received emergency request from " + event.patientName() + ". Notifying " + event.availableDoctorIds().size() + " doctors.");
 
         String message = event.patientName() + " needs an urgent consultation!";
-        // This link will eventually go to the new "Emergency Room" page for doctors
         String link = "/dashboard/emergency";
 
-        // Loop through all available doctor IDs from the event and send each a notification
         for (UUID doctorId : event.availableDoctorIds()) {
             notificationService.createAndSendNotification(doctorId, message, link);
         }
     }
 
-    @RabbitListener(queues = RabbitMQConfig.EMERGENCY_QUEUE_NAME)
+    // --- THIS IS THE FIX ---
+    // This listener now only listens to the queue for ACCEPTED requests
+    @RabbitListener(queues = RabbitMQConfig.EMERGENCY_ACCEPTED_QUEUE_NAME)
     public void handleEmergencyRequestAccepted(EmergencyRequestAcceptedEvent event) {
         System.out.println("Emergency request " + event.acceptedRequestId() + " was accepted. Notifying other doctors to remove it.");
 
-        // This is not a user-facing notification. It's a system message to update the UI.
-        // We will send a simple message containing just the ID of the request to remove.
         for (UUID doctorId : event.allNotifiedDoctorIds()) {
             notificationService.sendSystemUpdate(doctorId, "REQUEST_ACCEPTED", event.acceptedRequestId().toString());
         }

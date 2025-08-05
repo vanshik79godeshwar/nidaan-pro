@@ -1,6 +1,5 @@
 package com.nidaanpro.consultationservice.service;
 
-import com.nidaanpro.consultationservice.config.RabbitMQConfig;
 import com.nidaanpro.consultationservice.dto.*;
 import com.nidaanpro.consultationservice.dto.events.AppointmentConfirmationEvent;
 import com.nidaanpro.consultationservice.dto.events.EmergencyRequestAcceptedEvent;
@@ -39,8 +38,96 @@ public class ConsultationService {
     }
 
     @Transactional
+    public PaymentDto initiateEmergencyRequest(RequestEmergencyDto dto) {
+        UserDetailDto patientDetails = fetchUserDetails(dto.patientId());
+
+        EmergencyRequest request = new EmergencyRequest();
+        request.setPatientId(dto.patientId());
+        request.setSpecialityId(dto.specialityId());
+        request.setPatientName(patientDetails.fullName());
+        request.setStatus(EmergencyRequest.RequestStatus.PENDING_PAYMENT);
+        EmergencyRequest savedRequest = emergencyRequestRepository.save(request);
+
+        BigDecimal emergencyFee = new BigDecimal("800.00");
+
+        return webClientBuilder.build().post()
+                .uri("http://PAYMENT-SERVICE/api/payments/create-order")
+                .bodyValue(Map.of(
+                        "referenceId", savedRequest.getId(),
+                        "amount", emergencyFee,
+                        "type", "EMERGENCY"
+                ))
+                .retrieve()
+                .bodyToMono(PaymentDto.class)
+                .block();
+    }
+
+    @Transactional
+    public void confirmEmergencyPayment(UUID requestId) {
+        EmergencyRequest request = emergencyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Emergency request not found for payment confirmation."));
+
+        if (request.getStatus() != EmergencyRequest.RequestStatus.PENDING_PAYMENT) {
+            return;
+        }
+
+        request.setStatus(EmergencyRequest.RequestStatus.PENDING);
+        emergencyRequestRepository.save(request);
+
+        List<UserDetailDto> availableDoctors = webClientBuilder.build().get()
+                .uri("http://USER-PROFILE-SERVICE/api/doctors/emergency-available?specialityId={specId}", request.getSpecialityId())
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .collectList()
+                .block();
+
+        if (availableDoctors != null && !availableDoctors.isEmpty()) {
+            EmergencyRequestEvent event = new EmergencyRequestEvent(
+                    request.getId(),
+                    request.getPatientName(),
+                    request.getSpecialityId(),
+                    availableDoctors.stream().map(UserDetailDto::id).toList()
+            );
+            rabbitTemplate.convertAndSend("emergency-request-exchange", "emergency.request.new", event);
+        }
+    }
+
+    @Transactional
+    public PaymentDto bookAppointment(BookAppointmentDto dto) {
+        try {
+            webClientBuilder.build().post()
+                    .uri("http://USER-PROFILE-SERVICE/api/doctors/slots/{slotId}/book", dto.slotId())
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .block();
+        } catch (Exception e) {
+            throw new RuntimeException("This time slot is no longer available. Please select another.");
+        }
+
+        Appointment appointment = new Appointment();
+        appointment.setPatientId(dto.patientId());
+        appointment.setDoctorId(dto.doctorId());
+        appointment.setAppointmentTime(dto.appointmentTime());
+        appointment.setStatus(Appointment.Status.PENDING_PAYMENT);
+        appointment.setConsultationType(Appointment.ConsultationType.SCHEDULED);
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        BigDecimal consultationFee = new BigDecimal("500.00");
+
+        return webClientBuilder.build().post()
+                .uri("http://PAYMENT-SERVICE/api/payments/create-order")
+                .bodyValue(Map.of(
+                        "referenceId", savedAppointment.getId(),
+                        "amount", consultationFee,
+                        "type", "APPOINTMENT"
+                ))
+                .retrieve()
+                .bodyToMono(PaymentDto.class)
+                .block();
+    }
+
+    @Transactional
     public Appointment acceptEmergencyRequest(UUID requestId, UUID doctorId) {
-        // 1. Find the request and ensure it's still pending
         EmergencyRequest request = emergencyRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Emergency request not found."));
 
@@ -48,18 +135,33 @@ public class ConsultationService {
             throw new IllegalStateException("This request has already been accepted.");
         }
 
-        // 2. Update the request status
         request.setStatus(EmergencyRequest.RequestStatus.ACCEPTED);
         request.setAssignedDoctorId(doctorId);
         emergencyRequestRepository.save(request);
 
-        // 3. Create a formal appointment record for this emergency consultation
         Appointment appointment = new Appointment();
         appointment.setPatientId(request.getPatientId());
         appointment.setDoctorId(doctorId);
-        appointment.setAppointmentTime(Instant.now()); // The appointment is happening now
-        appointment.setStatus(Appointment.Status.READY); // It's ready for the call immediately
+        appointment.setAppointmentTime(Instant.now());
+        appointment.setStatus(Appointment.Status.READY);
         appointment.setConsultationType(Appointment.ConsultationType.EMERGENCY);
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        UserDetailDto patientDetails = fetchUserDetails(request.getPatientId());
+        UserDetailDto doctorDetails = fetchUserDetails(doctorId);
+
+        AppointmentConfirmationEvent patientNotificationEvent = new AppointmentConfirmationEvent(
+                savedAppointment.getId(),
+                patientDetails.id(),
+                doctorDetails.id(),
+                patientDetails.fullName(),
+                patientDetails.email(),
+                doctorDetails.fullName(),
+                savedAppointment.getAppointmentTime(),
+                savedAppointment.getConsultationType().name()
+        );
+
+        rabbitTemplate.convertAndSend("appointment-exchange", "appointment.booked", patientNotificationEvent);
 
         List<UserDetailDto> allNotifiedDoctors = webClientBuilder.build().get()
                 .uri("http://USER-PROFILE-SERVICE/api/doctors/emergency-available?specialityId={specId}", request.getSpecialityId())
@@ -68,52 +170,15 @@ public class ConsultationService {
                 .collectList()
                 .block();
 
-        // 2. Create and publish the "accepted" event
         if (allNotifiedDoctors != null && !allNotifiedDoctors.isEmpty()) {
             EmergencyRequestAcceptedEvent acceptedEvent = new EmergencyRequestAcceptedEvent(
                     requestId,
                     allNotifiedDoctors.stream().map(UserDetailDto::id).toList()
             );
-            // We'll define this new exchange in the notification-service
             rabbitTemplate.convertAndSend("emergency-request-exchange", "emergency.request.accepted", acceptedEvent);
         }
 
-        return appointmentRepository.save(appointment);
-    }
-
-    @Transactional
-    public EmergencyRequest createEmergencyRequest(RequestEmergencyDto dto) {
-        // 1. Get patient details for the notification message
-        UserDetailDto patientDetails = fetchUserDetails(dto.patientId());
-
-        // 2. Create and save the new emergency request record
-        EmergencyRequest request = new EmergencyRequest();
-        request.setPatientId(dto.patientId());
-        request.setSpecialityId(dto.specialityId());
-        request.setPatientName(patientDetails.fullName());
-        EmergencyRequest savedRequest = emergencyRequestRepository.save(request);
-
-        // 3. Find all doctors available for this emergency
-        List<UserDetailDto> availableDoctors = webClientBuilder.build().get()
-                .uri("http://USER-PROFILE-SERVICE/api/doctors/emergency-available?specialityId={specId}", dto.specialityId())
-                .retrieve()
-                .bodyToFlux(UserDetailDto.class)
-                .collectList()
-                .block();
-
-        // 4. Publish a notification event for each available doctor
-        if (availableDoctors != null && !availableDoctors.isEmpty()) {
-            EmergencyRequestEvent event = new EmergencyRequestEvent(
-                    savedRequest.getId(),
-                    patientDetails.fullName(),
-                    dto.specialityId(),
-                    availableDoctors.stream().map(UserDetailDto::id).toList() // Send a list of doctor IDs
-            );
-            // We'll need a new RabbitMQ exchange for this
-            rabbitTemplate.convertAndSend("emergency-request-exchange", "emergency.request.new", event);
-        }
-
-        return savedRequest;
+        return savedAppointment;
     }
 
     public List<EmergencyRequest> getPendingEmergencyRequests(Integer specialityId) {
@@ -121,66 +186,31 @@ public class ConsultationService {
     }
 
     private UserDetailDto fetchUserDetails(UUID userId) {
-        return webClientBuilder.build().post()
+        List<UserDetailDto> userDetails = webClientBuilder.build().post()
                 .uri("http://AUTH-SERVICE/api/users/details")
                 .bodyValue(List.of(userId))
                 .retrieve()
                 .bodyToFlux(UserDetailDto.class)
-                .blockFirst();
-    }
-
-    @Transactional
-    public PaymentDto bookAppointment(BookAppointmentDto dto) {
-        // Step 1: Call user-profile-service to mark the slot as booked.
-        // This implicitly validates that the slot exists and is available.
-        try {
-            webClientBuilder.build().post()
-                    .uri("http://USER-PROFILE-SERVICE/api/doctors/slots/{slotId}/book", dto.slotId())
-                    .retrieve()
-                    .bodyToMono(Void.class) // We only care if it succeeds (200 OK) or fails (409 Conflict)
-                    .block();
-        } catch (Exception e) {
-            // This will catch the error if the slot is already booked or doesn't exist
-            throw new RuntimeException("This time slot is no longer available. Please select another.");
-        }
-
-        // Step 2: Create the Appointment record in this service's database
-        Appointment appointment = new Appointment();
-        appointment.setPatientId(dto.patientId());
-        appointment.setDoctorId(dto.doctorId());
-        appointment.setAppointmentTime(dto.appointmentTime());
-        appointment.setStatus(Appointment.Status.PENDING_PAYMENT);
-        Appointment savedAppointment = appointmentRepository.save(appointment);
-
-        // Step 3: Call Payment Service to create a payment order
-        BigDecimal dummyAmount = new BigDecimal("500.00"); // Placeholder fee
-        PaymentDto paymentResponse = webClientBuilder.build().post()
-                .uri("http://PAYMENT-SERVICE/api/payments/create-order")
-                .bodyValue(Map.of(
-                        "appointmentId", savedAppointment.getId(),
-                        "amount", dummyAmount
-                ))
-                .retrieve()
-                .bodyToMono(PaymentDto.class)
+                .collectList()
                 .block();
 
-        UserDetailDto patientDetails = fetchUserDetails(dto.patientId());
-        UserDetailDto doctorDetails = fetchUserDetails(dto.doctorId());
+        if (userDetails == null || userDetails.isEmpty()) {
+            throw new RuntimeException("Could not find details for user ID: " + userId);
+        }
+        return userDetails.get(0);
+    }
 
-        AppointmentConfirmationEvent event = new AppointmentConfirmationEvent(
-                savedAppointment.getId(),
-                dto.patientId(),
-                dto.doctorId(),
-                patientDetails.fullName(),
-                patientDetails.email(),
-                doctorDetails.fullName(),
-                savedAppointment.getAppointmentTime()
-        );
-
-        // Step 4: Send notification about the booking
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, event);
-
-        return paymentResponse;
+    private Map<UUID, UserDetailDto> fetchMultipleUserDetails(List<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return webClientBuilder.build().post()
+                .uri("http://AUTH-SERVICE/api/users/details")
+                .bodyValue(userIds)
+                .retrieve()
+                .bodyToFlux(UserDetailDto.class)
+                .collectMap(UserDetailDto::id)
+                .block();
     }
 
     @Transactional
@@ -192,18 +222,13 @@ public class ConsultationService {
                 .orElse(new PreConsultationReport());
 
         report.setAppointmentId(dto.appointmentId());
-
-        // --- THIS IS THE FIX: Set the old field to satisfy the database ---
         report.setProblemBrief(dto.chiefComplaint());
-
-        // Map all the new fields from the DTO
         report.setChiefComplaint(dto.chiefComplaint());
         report.setStaticQuestions(dto.staticQuestions());
         report.setDynamicQuestions(dto.dynamicQuestions());
         report.setDetailedDescription(dto.detailedDescription());
         report.setCurrentMedications(dto.currentMedications());
         report.setAttachmentUrls(dto.attachmentUrls());
-
         PreConsultationReport savedReport = reportRepository.save(report);
 
         appointment.setStatus(Appointment.Status.READY);
@@ -217,34 +242,27 @@ public class ConsultationService {
     }
 
     public List<AppointmentDetailDto> getAppointmentsForPatient(UUID patientId) {
-        // 1. Get all appointments for the patient from our DB
         List<Appointment> appointments = appointmentRepository.findByPatientIdOrderByAppointmentTimeDesc(patientId);
         if (appointments.isEmpty()) {
-            return List.of();
+            return Collections.emptyList();
         }
 
-        // 2. Collect all unique doctor IDs from these appointments
-        List<UUID> doctorIds = appointments.stream()
-                .map(Appointment::getDoctorId)
-                .distinct()
-                .toList();
+        List<UUID> doctorIds = appointments.stream().map(Appointment::getDoctorId).distinct().toList();
+        Map<UUID, UserDetailDto> doctorDetailsMap = fetchMultipleUserDetails(doctorIds);
+        UserDetailDto patientDetails = fetchUserDetails(patientId);
 
-        // 3. Call user-profile-service to get details for all required doctors in one go
-        Map<UUID, DoctorDetailDto> doctorDetailsMap = webClientBuilder.build().post()
-                .uri("http://AUTH-SERVICE/api/users/details") // We need to create this endpoint
-                .bodyValue(doctorIds)
-                .retrieve()
-                .bodyToFlux(DoctorDetailDto.class)
-                .collectMap(DoctorDetailDto::id)
-                .block();
-
-        // 4. Combine the appointment data with the doctor details
         return appointments.stream()
                 .map(appointment -> {
-                    DoctorDetailDto doctor = doctorDetailsMap.get(appointment.getDoctorId());
-                    return new AppointmentDetailDto(appointment, doctor);
+                    UserDetailDto doctor = doctorDetailsMap.get(appointment.getDoctorId());
+                    if(doctor == null) return null;
+                    return new AppointmentDetailDto(
+                            appointment,
+                            new PatientDetailDto(patientDetails.id(), patientDetails.fullName(), patientDetails.email()),
+                            new DoctorDetailDto(doctor.id(), doctor.fullName(), doctor.email())
+                    );
                 })
-                .toList();
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public List<DoctorAppointmentDetailDto> getAppointmentsForDoctor(UUID doctorId) {
@@ -252,28 +270,20 @@ public class ConsultationService {
         if (appointments.isEmpty()) {
             return Collections.emptyList();
         }
+
         List<UUID> patientIds = appointments.stream().map(Appointment::getPatientId).distinct().toList();
+        Map<UUID, UserDetailDto> patientDetailsMap = fetchMultipleUserDetails(patientIds);
 
-        Map<UUID, PatientDetailDto> patientDetailsMap = webClientBuilder.build().post()
-                .uri("http://AUTH-SERVICE/api/users/details")
-                .bodyValue(patientIds)
-                .retrieve()
-                .bodyToFlux(PatientDetailDto.class)
-                .collectMap(PatientDetailDto::id)
-                .block();
-
-        // This is the crucial change: We ensure that we only create DTOs for appointments
-        // where we successfully found the corresponding patient details.
         return appointments.stream()
                 .map(appointment -> {
-                    PatientDetailDto patient = patientDetailsMap.get(appointment.getPatientId());
-                    // If the patient details are not found for any reason, return null
+                    UserDetailDto patient = patientDetailsMap.get(appointment.getPatientId());
                     if (patient == null) {
                         return null;
                     }
-                    return new DoctorAppointmentDetailDto(appointment, patient);
+                    PatientDetailDto patientDetailDto = new PatientDetailDto(patient.id(), patient.fullName(), patient.email());
+                    return new DoctorAppointmentDetailDto(appointment, patientDetailDto);
                 })
-                .filter(Objects::nonNull) // This line removes all the null entries from the list
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -296,7 +306,6 @@ public class ConsultationService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
 
-        // You could add logic here to ensure only doctors or involved patients can complete it
         appointment.setStatus(Appointment.Status.COMPLETED);
         return appointmentRepository.save(appointment);
     }
@@ -317,26 +326,27 @@ public class ConsultationService {
         return appointmentRepository.save(appointment);
     }
 
+    // --- THIS IS THE CORRECTED METHOD ---
     public Optional<AppointmentDetailDto> getAppointmentDetails(UUID appointmentId) {
         return appointmentRepository.findById(appointmentId)
                 .map(appointment -> {
-                    // Fetch the doctor's details from the auth-service
-                    DoctorDetailDto doctorDetails = webClientBuilder.build().post()
-                            .uri("http://AUTH-SERVICE/api/users/details")
-                            .bodyValue(List.of(appointment.getDoctorId()))
-                            .retrieve()
-                            .bodyToFlux(DoctorDetailDto.class)
-                            .blockFirst(); // We expect only one result
+                    // Fetch details for BOTH the doctor and the patient
+                    UserDetailDto doctorDetails = fetchUserDetails(appointment.getDoctorId());
+                    UserDetailDto patientDetails = fetchUserDetails(appointment.getPatientId());
 
-                    if (doctorDetails == null) {
+                    if (doctorDetails == null || patientDetails == null) {
                         return null;
                     }
-                    return new AppointmentDetailDto(appointment, doctorDetails);
+                    // Construct the full DTO with all required nested objects
+                    return new AppointmentDetailDto(
+                            appointment,
+                            new PatientDetailDto(patientDetails.id(), patientDetails.fullName(), patientDetails.email()),
+                            new DoctorDetailDto(doctorDetails.id(), doctorDetails.fullName(), doctorDetails.email())
+                    );
                 });
     }
 
     public List<Appointment> getAppointmentHistory(UUID userId1, UUID userId2) {
-        // This will return a list of all appointments between the two users, sorted by most recent first.
         return appointmentRepository.findAppointmentHistory(userId1, userId2);
     }
 
@@ -345,10 +355,26 @@ public class ConsultationService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found with ID: " + appointmentId));
 
-        // Only update if it's pending, to avoid race conditions or invalid states
         if (appointment.getStatus() == Appointment.Status.PENDING_PAYMENT) {
             appointment.setStatus(Appointment.Status.SCHEDULED);
-            return appointmentRepository.save(appointment);
+            Appointment savedAppointment = appointmentRepository.save(appointment);
+
+            UserDetailDto patientDetails = fetchUserDetails(savedAppointment.getPatientId());
+            UserDetailDto doctorDetails = fetchUserDetails(savedAppointment.getDoctorId());
+
+            AppointmentConfirmationEvent event = new AppointmentConfirmationEvent(
+                    savedAppointment.getId(),
+                    patientDetails.id(),
+                    doctorDetails.id(),
+                    patientDetails.fullName(),
+                    patientDetails.email(),
+                    doctorDetails.fullName(),
+                    savedAppointment.getAppointmentTime(),
+                    savedAppointment.getConsultationType().name()
+            );
+
+            rabbitTemplate.convertAndSend("appointment-exchange", "appointment.booked", event);
+            return savedAppointment;
         }
         return appointment;
     }
@@ -362,7 +388,6 @@ public class ConsultationService {
         EmergencyRequest request = emergencyRequestRepository.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found."));
 
-        // Security check: ensure the person cancelling is the one who made the request
         if (!request.getPatientId().equals(patientId)) {
             throw new SecurityException("You can only cancel your own requests.");
         }
@@ -371,7 +396,6 @@ public class ConsultationService {
             request.setStatus(EmergencyRequest.RequestStatus.CANCELLED);
             return emergencyRequestRepository.save(request);
         } else {
-            // Can't cancel a request that's already been accepted or completed
             throw new IllegalStateException("This request can no longer be cancelled.");
         }
     }

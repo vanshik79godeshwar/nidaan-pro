@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record CreatePaymentRequestDto(
-        UUID appointmentId,
-        BigDecimal amount
+        UUID referenceId,
+        BigDecimal amount,
+        String type
 ) {}

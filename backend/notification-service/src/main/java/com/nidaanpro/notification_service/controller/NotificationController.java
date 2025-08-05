@@ -1,3 +1,4 @@
+// backend/notification-service/src/main/java/com/nidaanpro/notification_service/controller/NotificationController.java
 package com.nidaanpro.notification_service.controller;
 
 import com.nidaanpro.notification_service.model.Notification;
@@ -19,5 +20,12 @@ public class NotificationController {
     @GetMapping("/{userId}")
     public ResponseEntity<List<Notification>> getNotifications(@PathVariable UUID userId) {
         return ResponseEntity.ok(notificationService.getNotificationsForUser(userId));
+    }
+
+    // --- ADD THIS METHOD ---
+    @PostMapping("/{userId}/mark-as-read")
+    public ResponseEntity<Void> markAllAsRead(@PathVariable UUID userId) {
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
     }
 }
