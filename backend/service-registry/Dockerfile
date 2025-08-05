@@ -12,7 +12,11 @@ COPY mvnw pom.xml ./
 # Copy the rest of the application source code
 COPY src ./src
 
-# Run the Maven package command to build the .jar file, skipping tests for a faster build
+# --- THIS IS THE FIX ---
+# Add execute permissions to the Maven wrapper script
+RUN chmod +x ./mvnw
+
+# Run the Maven package command to build the .jar file, skipping tests
 RUN ./mvnw package -DskipTests
 
 
