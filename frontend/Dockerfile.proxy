@@ -1,0 +1,8 @@
+FROM node:20-slim
+WORKDIR /app
+COPY package.json ./
+RUN npm install http-proxy
+COPY proxy-server.mjs ./
+COPY notification-proxy.mjs ./
+# Default command, can be overridden in Render
+CMD ["node", "proxy-server.mjs"]
