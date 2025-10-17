@@ -54,42 +54,52 @@ Asynchronous Communication: RabbitMQ is used for asynchronous communication betw
 <details>
 <summary>Click to view Microservices Overview</summary>
 
-Service
 
-Description
 
-service-registry
 
-The Eureka server that manages the registration and discovery of all microservices.
 
-api-gateway
-
-The single entry point for all incoming requests. It routes traffic to the appropriate service and handles JWT-based authentication.
-
-auth-service
-
-Manages user authentication, registration with OTP verification, login, and password reset functionalities.
-
-user-profile-service
-
-Handles the creation and management of detailed profiles for both patients and doctors, including specialities, availability, and reviews.
-
-consultation-service
-
-The core service that orchestrates appointments, pre-consultation reports, emergency requests, and video call integration.
-
-notification-service
-
-Responsible for sending real-time in-app notifications (via WebSockets) and email notifications for various events.
-
-chat-service
-
-A real-time chat service that enables one-on-one communication between patients and doctors using STOMP over WebSockets.
-
-payment-service
-
-Integrates with Razorpay to manage payments for appointments and other services.
-
+<table>
+<thead>
+<tr>
+<th align="left">Service</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>service-registry</code></strong></td>
+<td>The Eureka server that manages the registration and discovery of all microservices.</td>
+</tr>
+<tr>
+<td><strong><code>api-gateway</code></strong></td>
+<td>The single entry point for all incoming requests. It routes traffic to the appropriate service and handles JWT-based authentication.</td>
+</tr>
+<tr>
+<td><strong><code>auth-service</code></strong></td>
+<td>Manages user authentication, registration with OTP verification, login, and password reset functionalities.</td>
+</tr>
+<tr>
+<td><strong><code>user-profile-service</code></strong></td>
+<td>Handles the creation and management of detailed profiles for both patients and doctors, including specialities, availability, and reviews.</td>
+</tr>
+<tr>
+<td><strong><code>consultation-service</code></strong></td>
+<td>The core service that orchestrates appointments, pre-consultation reports, emergency requests, and video call integration.</td>
+</tr>
+<tr>
+<td><strong><code>notification-service</code></strong></td>
+<td>Responsible for sending real-time in-app notifications (via WebSockets) and email notifications for various events.</td>
+</tr>
+<tr>
+<td><strong><code>chat-service</code></strong></td>
+<td>A real-time chat service that enables one-on-one communication between patients and doctors using STOMP over WebSockets.</td>
+</tr>
+<tr>
+<td><strong><code>payment-service</code></strong></td>
+<td>Integrates with Razorpay to manage payments for appointments and other services.</td>
+</tr>
+</tbody>
+</table>
 </details>
 
 💻 Tech Stack
@@ -168,253 +178,308 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 <details>
 <summary>Click to expand the full API Documentation</summary>
 
-Auth Service (:8080)
 
-Method
 
-Endpoint
 
-Description
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/auth/register/request-otp
-
-Request an OTP for registration
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/auth/register/verify
-
-Verify OTP and register a user
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/auth/login
-
-Log in a user
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/auth/forgot-password
-
-Request a password reset token
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/auth/reset-password
-
-Reset a user's password
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/users/details
-
-Get details for a list of users
-
-User Profile Service (:8081)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/profiles/doctor
-
-Create or update a doctor's profile
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/profiles/patient
-
-Create or update a patient's profile
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/profiles/{userId}
-
-Get a user's profile by their ID
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/specialities
-
-Get a list of all medical specialities
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/specialities
-
-Create a new medical speciality
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/doctors
-
-Get a list of all doctors
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/doctors/{doctorId}/slots
-
-Add a new availability slot for a doctor
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/doctors/{doctorId}/slots
-
-Get a doctor's available slots
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/reviews
-
-Submit a review for a doctor
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/reviews/doctor/{doctorId}
-
-Get all reviews for a doctor
-
-Consultation Service (:8082)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/consultations/book
-
-Book a new appointment
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/consultations/patient/{patientId}
-
-Get all appointments for a patient
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/consultations/doctor/{doctorId}
-
-Get all appointments for a doctor
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/consultations/reports
-
-Submit a pre-consultation report
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/consultations/reports/appointment/{appointmentId}
-
-Get a pre-consultation report
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/consultations/chat-partners/{userId}
-
-Get a list of users the user can chat with
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/consultations/emergency/initiate
-
-Initiate an emergency consultation
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/consultations/emergency/pending
-
-Get pending emergency requests
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/consultations/emergency/{requestId}/accept
-
-Accept an emergency request
-
-Notification Service (:8083)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/notifications/{userId}
-
-Get all notifications for a user
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/notifications/{userId}/mark-as-read
-
-Mark all notifications as read
-
-Chat Service (:8084)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:purple;font-weight:bold">WebSocket</code>
-
-/chat
-
-Send a real-time chat message
-
-<code style="color:blue;font-weight:bold">GET</code>
-
-/api/chat/history
-
-Get chat history between two users
-
-Payment Service (:8085)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/payments/create-order
-
-Creates a new payment order
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/payments/webhook
-
-Handles payment status updates
-
-API Gateway (:9000)
-
-Method
-
-Endpoint
-
-Description
-
-<code style="color:green;font-weight:bold">POST</code>
-
-/api/ai/dynamic-questions
-
-Generates dynamic follow-up questions
+<details>
+<summary><strong>Auth Service</strong> (<code>:8080</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/auth/register/request-otp</code></td>
+<td>Request an OTP for registration</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/auth/register/verify</code></td>
+<td>Verify OTP and register a user</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/auth/login</code></td>
+<td>Log in a user</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/auth/forgot-password</code></td>
+<td>Request a password reset token</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/auth/reset-password</code></td>
+<td>Reset a user's password</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/users/details</code></td>
+<td>Get details for a list of users</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>User Profile Service</strong> (<code>:8081</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/profiles/doctor</code></td>
+<td>Create or update a doctor's profile</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/profiles/patient</code></td>
+<td>Create or update a patient's profile</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/profiles/{userId}</code></td>
+<td>Get a user's profile by their ID</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/specialities</code></td>
+<td>Get a list of all medical specialities</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/specialities</code></td>
+<td>Create a new medical speciality</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/doctors</code></td>
+<td>Get a list of all doctors</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/doctors/{doctorId}/slots</code></td>
+<td>Add a new availability slot for a doctor</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/doctors/{doctorId}/slots</code></td>
+<td>Get a doctor's available slots</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/reviews</code></td>
+<td>Submit a review for a doctor</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/reviews/doctor/{doctorId}</code></td>
+<td>Get all reviews for a doctor</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>Consultation Service</strong> (<code>:8082</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/consultations/book</code></td>
+<td>Book a new appointment</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/consultations/patient/{patientId}</code></td>
+<td>Get all appointments for a patient</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/consultations/doctor/{doctorId}</code></td>
+<td>Get all appointments for a doctor</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/consultations/reports</code></td>
+<td>Submit a pre-consultation report</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/consultations/reports/appointment/{appointmentId}</code></td>
+<td>Get a pre-consultation report</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/consultations/chat-partners/{userId}</code></td>
+<td>Get a list of users the user can chat with</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/consultations/emergency/initiate</code></td>
+<td>Initiate an emergency consultation</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/consultations/emergency/pending</code></td>
+<td>Get pending emergency requests</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/consultations/emergency/{requestId}/accept</code></td>
+<td>Accept an emergency request</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>Notification Service</strong> (<code>:8083</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/notifications/{userId}</code></td>
+<td>Get all notifications for a user</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/notifications/{userId}/mark-as-read</code></td>
+<td>Mark all notifications as read</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>Chat Service</strong> (<code>:8084</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #6f42c1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">WebSocket</code></td>
+<td><code>/chat</code></td>
+<td>Send a real-time chat message</td>
+</tr>
+<tr>
+<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td><code>/api/chat/history</code></td>
+<td>Get the chat history between two users</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>Payment Service</strong> (<code>:8085</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/payments/create-order</code></td>
+<td>Creates a new payment order</td>
+</tr>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/payments/webhook</code></td>
+<td>Handles payment status updates</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+<details>
+<summary><strong>API Gateway</strong> (<code>:9000</code>)</summary>
+
+
+
+
+
+<table>
+<thead>
+<tr>
+<th align="left" width="100px">Method</th>
+<th align="left" width="350px">Endpoint</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td><code>/api/ai/dynamic-questions</code></td>
+<td>Generates dynamic follow-up questions using AI</td>
+</tr>
+</tbody>
+</table>
+</details>
 
 </details>
 
