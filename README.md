@@ -183,24 +183,9 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 
 📖 API Endpoints
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #e0e7ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-▸ Click to expand the full API Documentation
-</summary>
+Auth Service (:8080)
 
-
-
-
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>Auth Service</strong> (<code>:8080</code>)
-</summary>
-
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -241,18 +226,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>User Profile Service</strong> (<code>:8081</code>)
-</summary>
+User Profile Service (:8081)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -313,18 +290,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>Consultation Service</strong> (<code>:8082</code>)
-</summary>
+Consultation Service (:8082)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -380,18 +349,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>Notification Service</strong> (<code>:8083</code>)
-</summary>
+Notification Service (:8083)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -412,18 +373,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>Chat Service</strong> (<code>:8084</code>)
-</summary>
+Chat Service (:8084)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -444,18 +397,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>Payment Service</strong> (<code>:8085</code>)
-</summary>
+Payment Service (:8085)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -476,18 +421,10 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
 
-<details>
-<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
-<strong>API Gateway</strong> (<code>:9000</code>)
-</summary>
+API Gateway (:9000)
 
-
-
-
-
-<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden; margin-top: 1rem;">
 <thead>
 <tr style="background-color: #f0f2ff;">
 <th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
@@ -503,9 +440,6 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 </tr>
 </tbody>
 </table>
-</details>
-
-</details>
 
 📜 License
 
