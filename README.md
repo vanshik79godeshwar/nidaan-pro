@@ -1,3 +1,5 @@
+<div style="background-image: linear-gradient(to bottom right, #f3f4ff, #e0e7ff); padding: 2rem; border-radius: 15px;">
+
 <div align="center">
 
 <img src="https://www.google.com/search?q=https://i.imgur.com/your-banner-image.png" alt="Nidaan Pro Banner" width="800"/>
@@ -52,51 +54,53 @@ API Gateway: A single entry point for all client requests, handled by Spring Clo
 Asynchronous Communication: RabbitMQ is used for asynchronous communication between services, ensuring loose coupling and improved fault tolerance.
 
 <details>
-<summary>Click to view Microservices Overview</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #e0e7ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+▸ Click to view Microservices Overview
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left">Service</th>
-<th align="left">Description</th>
+<tr style="background-color: #e0e7ff;">
+<th style="padding: 12px; border: 1px solid #c7d2fe; text-align: left;">Service</th>
+<th style="padding: 12px; border: 1px solid #c7d2fe; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><code>service-registry</code></strong></td>
-<td>The Eureka server that manages the registration and discovery of all microservices.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>service-registry</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">The Eureka server that manages the registration and discovery of all microservices.</td>
 </tr>
 <tr>
-<td><strong><code>api-gateway</code></strong></td>
-<td>The single entry point for all incoming requests. It routes traffic to the appropriate service and handles JWT-based authentication.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>api-gateway</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">The single entry point for all incoming requests. It routes traffic to the appropriate service and handles JWT-based authentication.</td>
 </tr>
 <tr>
-<td><strong><code>auth-service</code></strong></td>
-<td>Manages user authentication, registration with OTP verification, login, and password reset functionalities.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>auth-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">Manages user authentication, registration with OTP verification, login, and password reset functionalities.</td>
 </tr>
 <tr>
-<td><strong><code>user-profile-service</code></strong></td>
-<td>Handles the creation and management of detailed profiles for both patients and doctors, including specialities, availability, and reviews.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>user-profile-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">Handles the creation and management of detailed profiles for both patients and doctors, including specialities, availability, and reviews.</td>
 </tr>
 <tr>
-<td><strong><code>consultation-service</code></strong></td>
-<td>The core service that orchestrates appointments, pre-consultation reports, emergency requests, and video call integration.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>consultation-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">The core service that orchestrates appointments, pre-consultation reports, emergency requests, and video call integration.</td>
 </tr>
 <tr>
-<td><strong><code>notification-service</code></strong></td>
-<td>Responsible for sending real-time in-app notifications (via WebSockets) and email notifications for various events.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>notification-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">Responsible for sending real-time in-app notifications (via WebSockets) and email notifications for various events.</td>
 </tr>
 <tr>
-<td><strong><code>chat-service</code></strong></td>
-<td>A real-time chat service that enables one-on-one communication between patients and doctors using STOMP over WebSockets.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>chat-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">A real-time chat service that enables one-on-one communication between patients and doctors using STOMP over WebSockets.</td>
 </tr>
 <tr>
-<td><strong><code>payment-service</code></strong></td>
-<td>Integrates with Razorpay to manage payments for appointments and other services.</td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;"><strong><code>payment-service</code></strong></td>
+<td style="padding: 12px; border: 1px solid #c7d2fe;">Integrates with Razorpay to manage payments for appointments and other services.</td>
 </tr>
 </tbody>
 </table>
@@ -105,7 +109,10 @@ Asynchronous Communication: RabbitMQ is used for asynchronous communication betw
 💻 Tech Stack
 
 <details>
-<summary>Click to view the full Technology Stack</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #e0e7ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+▸ Click to view the full Technology Stack
+</summary>
+<div style="background-color: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #c7d2fe;">
 
 Backend
 
@@ -147,6 +154,7 @@ SendGrid (for emails)
 
 Google Gemini AI (for AI-powered pre-consultation)
 
+</div>
 </details>
 
 🚀 Getting Started
@@ -176,306 +184,322 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 📖 API Endpoints
 
 <details>
-<summary>Click to expand the full API Documentation</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #e0e7ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+▸ Click to expand the full API Documentation
+</summary>
 
 
 
 
 <details>
-<summary><strong>Auth Service</strong> (<code>:8080</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>Auth Service</strong> (<code>:8080</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/auth/register/request-otp</code></td>
-<td>Request an OTP for registration</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/auth/register/request-otp</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Request an OTP for registration</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/auth/register/verify</code></td>
-<td>Verify OTP and register a user</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/auth/register/verify</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Verify OTP and register a user</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/auth/login</code></td>
-<td>Log in a user</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/auth/login</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Log in a user</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/auth/forgot-password</code></td>
-<td>Request a password reset token</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/auth/forgot-password</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Request a password reset token</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/auth/reset-password</code></td>
-<td>Reset a user's password</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/auth/reset-password</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Reset a user's password</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/users/details</code></td>
-<td>Get details for a list of users</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/users/details</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get details for a list of users</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>User Profile Service</strong> (<code>:8081</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>User Profile Service</strong> (<code>:8081</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/profiles/doctor</code></td>
-<td>Create or update a doctor's profile</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/profiles/doctor</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Create or update a doctor's profile</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/profiles/patient</code></td>
-<td>Create or update a patient's profile</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/profiles/patient</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Create or update a patient's profile</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/profiles/{userId}</code></td>
-<td>Get a user's profile by their ID</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/profiles/{userId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a user's profile by their ID</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/specialities</code></td>
-<td>Get a list of all medical specialities</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/specialities</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a list of all medical specialities</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/specialities</code></td>
-<td>Create a new medical speciality</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/specialities</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Create a new medical speciality</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/doctors</code></td>
-<td>Get a list of all doctors</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/doctors</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a list of all doctors</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/doctors/{doctorId}/slots</code></td>
-<td>Add a new availability slot for a doctor</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/doctors/{doctorId}/slots</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Add a new availability slot for a doctor</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/doctors/{doctorId}/slots</code></td>
-<td>Get a doctor's available slots</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/doctors/{doctorId}/slots</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a doctor's available slots</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/reviews</code></td>
-<td>Submit a review for a doctor</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/reviews</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Submit a review for a doctor</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/reviews/doctor/{doctorId}</code></td>
-<td>Get all reviews for a doctor</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/reviews/doctor/{doctorId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get all reviews for a doctor</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>Consultation Service</strong> (<code>:8082</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>Consultation Service</strong> (<code>:8082</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/consultations/book</code></td>
-<td>Book a new appointment</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/book</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Book a new appointment</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/consultations/patient/{patientId}</code></td>
-<td>Get all appointments for a patient</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/patient/{patientId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get all appointments for a patient</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/consultations/doctor/{doctorId}</code></td>
-<td>Get all appointments for a doctor</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/doctor/{doctorId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get all appointments for a doctor</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/consultations/reports</code></td>
-<td>Submit a pre-consultation report</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/reports</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Submit a pre-consultation report</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/consultations/reports/appointment/{appointmentId}</code></td>
-<td>Get a pre-consultation report</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/reports/appointment/{appointmentId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a pre-consultation report</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/consultations/chat-partners/{userId}</code></td>
-<td>Get a list of users the user can chat with</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/chat-partners/{userId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get a list of users the user can chat with</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/consultations/emergency/initiate</code></td>
-<td>Initiate an emergency consultation</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/emergency/initiate</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Initiate an emergency consultation</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/consultations/emergency/pending</code></td>
-<td>Get pending emergency requests</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/emergency/pending</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get pending emergency requests</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/consultations/emergency/{requestId}/accept</code></td>
-<td>Accept an emergency request</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/consultations/emergency/{requestId}/accept</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Accept an emergency request</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>Notification Service</strong> (<code>:8083</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>Notification Service</strong> (<code>:8083</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/notifications/{userId}</code></td>
-<td>Get all notifications for a user</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/notifications/{userId}</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get all notifications for a user</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/notifications/{userId}/mark-as-read</code></td>
-<td>Mark all notifications as read</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/notifications/{userId}/mark-as-read</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Mark all notifications as read</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>Chat Service</strong> (<code>:8084</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>Chat Service</strong> (<code>:8084</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #6f42c1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">WebSocket</code></td>
-<td><code>/chat</code></td>
-<td>Send a real-time chat message</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #6f42c1; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">WebSocket</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/chat</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Send a real-time chat message</td>
 </tr>
 <tr>
-<td><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
-<td><code>/api/chat/history</code></td>
-<td>Get the chat history between two users</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">GET</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/chat/history</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Get the chat history between two users</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>Payment Service</strong> (<code>:8085</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>Payment Service</strong> (<code>:8085</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/payments/create-order</code></td>
-<td>Creates a new payment order</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/payments/create-order</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Creates a new payment order</td>
 </tr>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/payments/webhook</code></td>
-<td>Handles payment status updates</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/payments/webhook</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Handles payment status updates</td>
 </tr>
 </tbody>
 </table>
 </details>
 
 <details>
-<summary><strong>API Gateway</strong> (<code>:9000</code>)</summary>
+<summary style="padding: 0.8rem 1.2rem; margin-bottom: 0.5rem; background-color: #f0f2ff; border-radius: 0.5rem; font-weight: bold; cursor: pointer; list-style: none; border: 1px solid #c7d2fe;">
+<strong>API Gateway</strong> (<code>:9000</code>)
+</summary>
 
 
 
 
 
-<table>
+<table style="width:100%; border-collapse: collapse; background-color: #fff; border-radius: 8px; overflow: hidden;">
 <thead>
-<tr>
-<th align="left" width="100px">Method</th>
-<th align="left" width="350px">Endpoint</th>
-<th align="left">Description</th>
+<tr style="background-color: #f0f2ff;">
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 100px;">Method</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left; width: 350px;">Endpoint</th>
+<th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
-<td><code>/api/ai/dynamic-questions</code></td>
-<td>Generates dynamic follow-up questions using AI</td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">POST</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;"><code>/api/ai/dynamic-questions</code></td>
+<td style="padding: 12px; border: 1px solid #ddd;">Generates dynamic follow-up questions using AI</td>
 </tr>
 </tbody>
 </table>
@@ -486,3 +510,5 @@ HMS_MANAGEMENT_TOKEN=your_hms_management_token
 📜 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+</div>
