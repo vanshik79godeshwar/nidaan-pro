@@ -8,7 +8,7 @@ RUN chmod +x ./mvnw
 RUN ./mvnw package -DskipTests
 
 # STAGE 2: Create the final lightweight runtime image
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=builder /build/target/*.jar app.jar
 EXPOSE 8083

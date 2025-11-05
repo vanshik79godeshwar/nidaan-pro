@@ -4,12 +4,14 @@ services:
     container_name: rabbitmq
     ports: ["5672:5672", "15672:15672"]
     networks: [nidaan-pro-net]
-    dns: [8.8.8.8]
+    # dns: [8.8.8.8]
 
   service-registry:
     build: { context: ./service-registry, dockerfile: Dockerfile }
     container_name: service-registry
-    network_mode: host
+    ports: ["8761:8761"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761"]
       interval: 30s
@@ -19,28 +21,30 @@ services:
   auth-service:
     build: { context: ./auth-service, dockerfile: Dockerfile }
     container_name: auth-service
-    network_mode: host
+    # ports: ["8080:8080"]
+    networks: [nidaan-pro-net]
     dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8080
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=localhost
+      - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
       - JWT_SECRET=${JWT_SECRET}
-    depends_on: { service-registry: { condition: service_healthy } }
+    depends_on: { service-registry: { condition: service_healthy }, rabbitmq: { condition: service_started } }
 
   user-profile-service:
     build: { context: ./user-profile-service, dockerfile: Dockerfile }
     container_name: user-profile-service
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["8081:8081"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8081
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -49,15 +53,16 @@ services:
   consultation-service:
     build: { context: ./consultation-service, dockerfile: Dockerfile }
     container_name: consultation-service
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["8082:8082"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8082
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=localhost
+      - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
       - HMS_MANAGEMENT_TOKEN=${HMS_MANAGEMENT_TOKEN}
@@ -66,15 +71,16 @@ services:
   notification-service:
     build: { context: ./notification-service, dockerfile: Dockerfile }
     container_name: notification-service
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["8083:8083"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8083
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=localhost
+      - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
       - JWT_SECRET=${JWT_SECRET}
@@ -84,11 +90,12 @@ services:
   chat-service:
     build: { context: ./chat-service, dockerfile: Dockerfile }
     container_name: chat-service
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["8084:8084"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8084
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
@@ -98,26 +105,28 @@ services:
   payment-service:
     build: { context: ./payment-service, dockerfile: Dockerfile }
     container_name: payment-service
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["8085:8085"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=8085
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
       - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
     depends_on: { service-registry: { condition: service_healthy } }
-  
+
   api-gateway:
     build: { context: ./api-gateway, dockerfile: Dockerfile }
     container_name: api-gateway
-    network_mode: host
-    dns: [8.8.8.8]
+    ports: ["9000:9000"]
+    networks: [nidaan-pro-net]
+    # dns: [8.8.8.8]
     environment:
       - SERVER_PORT=9000
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka/
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
       - JWT_SECRET=${JWT_SECRET}
     depends_on: [auth-service, user-profile-service, consultation-service, notification-service, chat-service, payment-service]
 
@@ -127,7 +136,7 @@ services:
     command: node proxy-server.mjs
     ports: ["9001:9001"]
     networks: [nidaan-pro-net]
-  
+
   notification-proxy:
     build: { context: ../frontend, dockerfile: Dockerfile.proxy }
     container_name: notification-proxy

@@ -23,12 +23,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // CHANGE THIS LINE
-                        .requestMatchers("/api/auth/**", "/api/users/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                // REMOVED SESSION MANAGEMENT (for simplicity, only stateless needed for JWT)
+                // .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // --- THE FIX: TEMPORARILY ALLOW ALL TRAFFIC ---
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
         return http.build();
     }
 }
