@@ -2,22 +2,47 @@
 
 <div align="center">
 
-<img src="https://www.google.com/search?q=https://i.imgur.com/your-banner-image.png" alt="Nidaan Pro Banner" width="800"/>
-
-Nidaan Pro: An AI-Powered Distributed Telemedicine Platform
+# Nidaan Pro: An AI-Powered Distributed Telemedicine Platform
 
 A comprehensive, distributed telemedicine platform designed to bridge the gap between patients and doctors. Built on a robust microservices architecture, it offers a seamless and feature-rich experience for online consultations, from appointment booking and AI-driven pre-consultation to secure video calls and real-time communication.
 
-<p align="center">
-<img alt="Java" src="https://www.google.com/search?q=https://img.shields.io/badge/Java-21-blue.svg%3Fstyle%3Dfor-the-badge%26logo%3Dopenjdk%26logoColor%3Dwhite">
-<img alt="Spring Boot" src="https://www.google.com/search?q=https://img.shields.io/badge/Spring_Boot-3-success.svg%3Fstyle%3Dfor-the-badge%26logo%3Dspring%26logoColor%3Dwhite">
-<img alt="Next.js" src="https://www.google.com/search?q=https://img.shields.io/badge/Next.js-15-black.svg%3Fstyle%3Dfor-the-badge%26logo%3Dnext.js%26logoColor%3Dwhite">
-<img alt="React" src="https://www.google.com/search?q=https://img.shields.io/badge/React-18-blue.svg%3Fstyle%3Dfor-the-badge%26logo%3Dreact%26logoColor%3Dwhite">
-<img alt="Docker" src="https://www.google.com/search?q=https://img.shields.io/badge/Docker-gray.svg%3Fstyle%3Dfor-the-badge%26logo%3Ddocker%26logoColor%3Dwhite">
-<img alt="PostgreSQL" src="https://www.google.com/search?q=https://img.shields.io/badge/PostgreSQL-blue.svg%3Fstyle%3Dfor-the-badge%26logo%3Dpostgresql%26logoColor%3Dwhite">
-</p>
-
 </div>
+
+---
+
+## 🏗️ System Architecture Diagrams
+
+Showcasing the core of Nidaan Pro's design. The platform is built on a scalable microservices architecture.
+
+<div align="center" style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-bottom: 2rem;">
+    <a href="assets/d1.png" title="High-Level Architecture">
+        <img src="assets/d1.png" alt="High-Level Architecture Diagram" width="300" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+    </a>
+    <a href="assets/d3.png" title="Tech Stack Breakdown">
+        <img src="assets/d3.png" alt="Component Breakdown Diagram" width="300" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+    </a>
+    <a href="assets/d2.png" title="Data Flow Diagram">
+        <img src="assets/d2.png" alt="Data Flow Diagram" width="300" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+    </a>
+</div>
+
+---
+
+## 📸 Project Screenshots
+
+Explore the user interface of Nidaan Pro.
+
+<div style="overflow-x: auto; white-space: nowrap; padding-bottom: 10px; margin-bottom: 1rem; border-radius: 10px; border: 1px solid #c7d2fe; padding: 15px;">
+    <img src="assets/ui6.png" alt="Screenshot 1 - Homepage" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui5.png" alt="Screenshot 2 - Doctor Profile" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui7.png" alt="Screenshot 3 - Consultation UI" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui2.png" alt="Screenshot 4 - Appointment Booking" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui1.png" alt="Screenshot 5 - Chat Interface" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui3.png" alt="Screenshot 5 - Chat Interface" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    <img src="assets/ui4.png" alt="Screenshot 5 - Chat Interface" style="height: 350px; margin-right: 15px; border-radius: 8px; display: inline-block; object-fit: cover;">
+    </div>
+
+---
 
 ✨ Core Features
 
