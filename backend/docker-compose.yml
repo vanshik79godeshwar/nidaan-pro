@@ -1,134 +1,153 @@
 services:
+  # --- 1. Infrastructure ---
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
     ports: ["5672:5672", "15672:15672"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   service-registry:
     build: { context: ./service-registry, dockerfile: Dockerfile }
     container_name: service-registry
     ports: ["8761:8761"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
+    environment:
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761"]
       interval: 30s
       timeout: 10s
       retries: 5
 
+  # --- 2. Backend Services ---
   auth-service:
     build: { context: ./auth-service, dockerfile: Dockerfile }
     container_name: auth-service
-    # ports: ["8080:8080"]
     networks: [nidaan-pro-net]
-    dns: [8.8.8.8]
-    environment:
-      - SERVER_PORT=8080
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on: { service-registry: { condition: service_healthy }, rabbitmq: { condition: service_started } }
+    dns: [8.8.8.8, 1.1.1.1]
+    environment: &common-env
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 2
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      # --- CRITICAL FIX: Register with Docker IP, not localhost ---
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+    depends_on:
+      service-registry: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
 
   user-profile-service:
     build: { context: ./user-profile-service, dockerfile: Dockerfile }
     container_name: user-profile-service
     ports: ["8081:8081"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=8081
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-    depends_on: { service-registry: { condition: service_healthy } }
+      <<: *common-env
+      SERVER_PORT: 8081
+    depends_on:
+      service-registry: { condition: service_healthy }
 
   consultation-service:
     build: { context: ./consultation-service, dockerfile: Dockerfile }
     container_name: consultation-service
     ports: ["8082:8082"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=8082
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
-      - HMS_MANAGEMENT_TOKEN=${HMS_MANAGEMENT_TOKEN}
-    depends_on: { service-registry: { condition: service_healthy } }
+      <<: *common-env
+      SERVER_PORT: 8082
+      HMS_MANAGEMENT_TOKEN: ${HMS_MANAGEMENT_TOKEN}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    depends_on:
+      service-registry: { condition: service_healthy }
 
   notification-service:
     build: { context: ./notification-service, dockerfile: Dockerfile }
     container_name: notification-service
     ports: ["8083:8083"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=8083
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_USERNAME=guest
-      - SPRING_RABBITMQ_PASSWORD=guest
-      - JWT_SECRET=${JWT_SECRET}
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-    depends_on: { service-registry: { condition: service_healthy } }
+      <<: *common-env
+      SERVER_PORT: 8083
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+    depends_on:
+      service-registry: { condition: service_healthy }
 
   chat-service:
     build: { context: ./chat-service, dockerfile: Dockerfile }
     container_name: chat-service
     ports: ["8084:8084"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=8084
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on: { service-registry: { condition: service_healthy } }
+      <<: *common-env
+      SERVER_PORT: 8084
+    depends_on:
+      service-registry: { condition: service_healthy }
 
   payment-service:
     build: { context: ./payment-service, dockerfile: Dockerfile }
     container_name: payment-service
     ports: ["8085:8085"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=8085
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
-      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
-    depends_on: { service-registry: { condition: service_healthy } }
+      <<: *common-env
+      SERVER_PORT: 8085
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+    depends_on:
+      service-registry: { condition: service_healthy }
 
   api-gateway:
     build: { context: ./api-gateway, dockerfile: Dockerfile }
     container_name: api-gateway
     ports: ["9000:9000"]
     networks: [nidaan-pro-net]
-    # dns: [8.8.8.8]
+    dns: [8.8.8.8, 1.1.1.1]
     environment:
-      - SERVER_PORT=9000
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
-      - JWT_SECRET=${JWT_SECRET}
+      SERVER_PORT: 9000
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Fix for Gateway as well
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on: [auth-service, user-profile-service, consultation-service, notification-service, chat-service, payment-service]
+
+  # --- 3. Frontend & Proxies ---
+  
+  frontend:
+    build: { context: ../frontend, dockerfile: Dockerfile }
+    container_name: frontend
+    ports: ["3000:3000"]
+    networks: [nidaan-pro-net]
+    dns: [8.8.8.8, 1.1.1.1]
+    environment:
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: ${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+      NEXT_PUBLIC_API_URL: http://api-gateway:9000/api 
+    depends_on: [api-gateway]
 
   chat-proxy:
     build: { context: ../frontend, dockerfile: Dockerfile.proxy }
@@ -136,6 +155,7 @@ services:
     command: node proxy-server.mjs
     ports: ["9001:9001"]
     networks: [nidaan-pro-net]
+    depends_on: [chat-service]
 
   notification-proxy:
     build: { context: ../frontend, dockerfile: Dockerfile.proxy }
@@ -143,6 +163,7 @@ services:
     command: node notification-proxy.mjs
     ports: ["9002:9002"]
     networks: [nidaan-pro-net]
+    depends_on: [notification-service]
 
 networks:
   nidaan-pro-net:
