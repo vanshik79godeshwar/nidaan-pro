@@ -1,11 +1,11 @@
 import http from 'http';
 import httpProxy from 'http-proxy';
 
-const NOTIFICATION_SERVICE_URL = 'http://localhost:8083'; // Your notification-service address
+const NOTIFICATION_SERVICE_URL = 'http://notification-service:8083'; // Your notification-service address
 const PROXY_PORT = 9002; // A new port for this proxy
 
 const proxy = httpProxy.createProxyServer({
-  target: NOTIFICATION_SERVICE_URL,
+  target: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:8083',
   ws: true, // Enable WebSocket proxying
 });
 
